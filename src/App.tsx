@@ -36,6 +36,14 @@ import PatientsDashboard from "./pages/PatientsDashboard";
 import Records from "./pages/Records";
 import Programs from "./pages/Programs";
 import Shop from "./pages/Shop";
+import AIDashboard from "./pages/AIDashboard"; // Import the new component
+import BoothwynTest from "./pages/AIDashboard/BoothwynTest"; // Import sub-page
+import HallandaleTest from "./pages/AIDashboard/HallandaleTest"; // Import sub-page
+import ShippingTest from "./pages/AIDashboard/ShippingTest"; // Import sub-page
+import SendGridTest from "./pages/AIDashboard/SendGridTest"; // Import sub-page
+import PracticeBetterTest from "./pages/AIDashboard/PracticeBetterTest"; // Import sub-page
+import GeneralAITest from "./pages/AIDashboard/GeneralAITest"; // Import sub-page
+
 
 const queryClient = new QueryClient();
 
@@ -75,6 +83,20 @@ function App() {
                   <Route path="/patients/:id" element={<PatientDetails />} />
                   <Route path="/patient-dashboard/:id" element={<PatientDashboard />} />
                   <Route path="/patients-dashboard" element={<PatientsDashboard />} />
+                  
+                  {/* AI Dashboard Routes */}
+                  <Route path="/ai-dashboard" element={<AIDashboard />}>
+                    {/* Nested routes for sub-pages */}
+                    <Route path="boothwyn" element={<BoothwynTest />} />
+                    <Route path="hallandale" element={<HallandaleTest />} />
+                    <Route path="shipping" element={<ShippingTest />} />
+                    <Route path="sendgrid" element={<SendGridTest />} />
+                    <Route path="practice-better" element={<PracticeBetterTest />} />
+                    <Route path="general-ai" element={<GeneralAITest />} />
+                    {/* Add a default route for /ai-dashboard if needed */}
+                    {/* <Route index element={<div>Select a test from the sidebar</div>} /> */}
+                  </Route>
+
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </MainLayout>
