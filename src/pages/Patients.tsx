@@ -1,16 +1,18 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import PageLayout from "@/components/layout/PageLayout";
 import { DataTable } from "@/components/ui/data-table";
-import { patientColumns } from "@/components/patients/PatientColumns";
+import { getPatientColumns } from "@/components/patients/PatientColumns";
 import AddPatientDialog from "@/components/patients/AddPatientDialog";
 import { toast } from "@/components/ui/sonner";
+import { useNavigate } from "react-router-dom";
 
 const Patients = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const navigate = useNavigate();
+  const columns = getPatientColumns(navigate);
 
   const { data: patients = [], isLoading, refetch } = useQuery({
     queryKey: ["patients"],
@@ -53,7 +55,7 @@ const Patients = () => {
       isLoading={isLoading}
     >
       <DataTable
-        columns={patientColumns}
+        columns={columns}
         data={patients}
         filterKey="last_name"
         searchPlaceholder="Search patients..."
