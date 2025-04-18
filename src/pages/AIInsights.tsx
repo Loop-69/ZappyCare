@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import PageLayout from "@/components/layout/PageLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,7 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 export default function AIInsights() {
   const [activeTab, setActiveTab] = useState("overview");
   const [generatingInsight, setGeneratingInsight] = useState(false);
-  
+  const [generatingDiagnosticSuggestion, setGeneratingDiagnosticSuggestion] = useState(false);
+
   // Mock query - this would be replaced with actual data fetching logic
   const { data: aiStats, isLoading: statsLoading } = useQuery({
     queryKey: ["ai-stats"],
@@ -35,6 +35,14 @@ export default function AIInsights() {
     setGeneratingInsight(true);
     setTimeout(() => {
       setGeneratingInsight(false);
+    }, 3000);
+  };
+
+  const generateDiagnosticSuggestion = () => {
+    setGeneratingDiagnosticSuggestion(true);
+    // TODO: Implement actual diagnostic suggestion generation logic
+    setTimeout(() => {
+      setGeneratingDiagnosticSuggestion(false);
     }, 3000);
   };
 
@@ -275,7 +283,7 @@ export default function AIInsights() {
                     </Card>
                   </div>
                   
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full" onClick={() => console.log("Navigate to all automated summaries")}>
                     View All Health Insights
                     <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -358,7 +366,7 @@ export default function AIInsights() {
                     </Card>
                   </div>
                   
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full" onClick={() => console.log("Navigate to all automated summaries")}>
                     View All Automated Summaries
                     <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -404,31 +412,40 @@ export default function AIInsights() {
                         className="w-full border rounded-md p-3 h-24 mb-4" 
                         placeholder="Describe patient symptoms, test results, and relevant medical history..."
                       />
-                      <div className="flex justify-end">
-                        <Button>
-                          <MessageSquare className="mr-2 h-4 w-4" />
-                          Generate Diagnostic Suggestions
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+                       <div className="flex justify-end">
+                         <Button onClick={generateDiagnosticSuggestion} disabled={generatingDiagnosticSuggestion}>
+                           {generatingDiagnosticSuggestion ? (
+                             <>
+                               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                               Generating...
+                             </>
+                           ) : (
+                             <>
+                               <MessageSquare className="mr-2 h-4 w-4" />
+                               Generate Diagnostic Suggestions
+                             </>
+                           )}
+                         </Button>
+                       </div>
+                     </div>
+                   </div>
                   
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base">Recent Diagnostic Suggestions</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-sm text-muted-foreground text-center py-6">
-                        No recent diagnostic suggestions available.
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </PageLayout>
-  );
-}
+                   <Card>
+                     <CardHeader className="pb-2">
+                       <CardTitle className="text-base">Recent Diagnostic Suggestions</CardTitle>
+                     </CardHeader>
+                     <CardContent>
+                       <div className="text-sm text-muted-foreground text-center py-6">
+                         No recent diagnostic suggestions available.
+                       </div>
+                     </CardContent>
+                   </Card>
+                 </div>
+               </CardContent>
+             </Card>
+           </TabsContent>
+         </Tabs>
+       </div>
+     </PageLayout>
+   );
+ }

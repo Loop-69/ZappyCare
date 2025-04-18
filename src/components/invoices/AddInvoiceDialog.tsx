@@ -93,7 +93,7 @@ export function AddInvoiceDialog({ open, onClose, onSuccess }: AddInvoiceDialogP
     updateItems(newItems);
   };
 
-  const updateItemField = (index: number, field: keyof typeof items[0], value: any) => {
+  const updateItemField = (index: number, field: keyof typeof items[0], value: string | number) => {
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
     updateItems(newItems);
@@ -107,13 +107,16 @@ export function AddInvoiceDialog({ open, onClose, onSuccess }: AddInvoiceDialogP
   };
 
   const onSubmit = async (data: InvoiceFormValues) => {
+    console.log("Attempting to create invoice with data:", data); // Log the data being submitted
     try {
       const selectedPatient = patients.find(p => p.id === data.patient_id);
       
       // Generate invoice ID (INV-XXX)
-      const { count } = await supabase
+      const { count, error: countError } = await supabase
         .from('invoices')
         .select('*', { count: 'exact', head: true });
+
+      if (countError) throw countError;
       
       const invoiceNumber = (count || 0) + 1;
       const invoice_id = `INV-${invoiceNumber.toString().padStart(3, '0')}`;
@@ -141,17 +144,21 @@ export function AddInvoiceDialog({ open, onClose, onSuccess }: AddInvoiceDialogP
         invoice_id: invoice_id,
         email: data.email,
         patient_name: `${selectedPatient?.first_name} ${selectedPatient?.last_name}`,
-        items: itemsWithTotal as any,
+        items: itemsWithTotal,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase insertion error:', error); // Log Supabase error
+        throw error;
+      }
 
+      console.log("Invoice created successfully"); // Log success
       toast.success("Invoice created successfully");
       onSuccess();
       onClose();
     } catch (error) {
       console.error('Error creating invoice:', error);
-      toast.error("Failed to create invoice");
+      toast.error(`Failed to create invoice: ${error.message}`); // Include error message in toast
     }
   };
 

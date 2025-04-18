@@ -1,5 +1,5 @@
 
-import { Bell, Eye, Search, User, LayoutDashboard } from "lucide-react";
+import { Bell, Eye, Search, User, LayoutDashboard, BrainCircuit } from "lucide-react"; // Import BrainCircuit
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -55,6 +55,10 @@ const Header = ({ user = { name: "Admin", role: "Admin" } }: HeaderProps) => {
             <DropdownMenuItem onClick={() => navigate('/patients-dashboard')}>
               <User className="mr-2 h-4 w-4" />
               <span>Patient Dashboard</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/ai-dashboard')}> {/* Add AI Dashboard item */}
+              <BrainCircuit className="mr-2 h-4 w-4" /> {/* Use BrainCircuit icon */}
+              <span>AI Dashboard</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
