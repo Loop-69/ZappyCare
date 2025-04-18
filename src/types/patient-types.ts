@@ -7,10 +7,11 @@ export interface Patient {
   gender: string;
   email: string;
   phone: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   address: any;
-  city: string;
-  state: string;
-  zip_code: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
   insurance_provider: string;
   insurance_policy_number: string;
   created_at: string;

@@ -133,7 +133,7 @@ export const useDashboardData = () => {
         .from("consultations")
         .select(`
           *,
-          patients:patient_id (first_name, last_name, email)
+          patients (first_name, last_name, email)
         `)
         .eq("status", "Pending")
         .order("created_at", { ascending: false })
@@ -153,12 +153,12 @@ export const useDashboardData = () => {
           form_completed: consultation.form_completed || false,
           date_submitted: consultation.date_submitted || consultation.created_at,
           patient_id: consultation.patient_id,
-          // Handle potential error in the patients field by providing default values
+          // Handle potential error in the patients field by providing default values and correct type
           patients: consultation.patients && typeof consultation.patients === 'object' 
             ? {
-                first_name: (consultation.patients as any).first_name || 'Unknown',
-                last_name: (consultation.patients as any).last_name || 'Patient',
-                email: (consultation.patients as any).email || 'unknown@example.com'
+                first_name: (consultation.patients as { first_name: string | null }).first_name || 'Unknown',
+                last_name: (consultation.patients as { last_name: string | null }).last_name || 'Patient',
+                email: (consultation.patients as { email: string | null }).email || 'unknown@example.com'
               }
             : { 
                 first_name: 'Unknown', 
