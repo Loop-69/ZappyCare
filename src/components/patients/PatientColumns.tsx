@@ -18,8 +18,35 @@ import { Patient } from "@/types/patient-types"; // Import the Patient type
 // Use the Patient type directly for column definitions
 export type PatientData = Patient;
 
+import { Checkbox } from "@/components/ui/checkbox";
+
 export const getPatientColumns = (navigate: NavigateFunction, onEditClick: (patient: PatientData) => void): ColumnDef<PatientData>[] => {
   return [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected()
+              ? true
+              : table.getIsSomePageRowsSelected()
+              ? "indeterminate"
+              : false
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
     {
       accessorKey: "patient_info",
       header: "PATIENT",

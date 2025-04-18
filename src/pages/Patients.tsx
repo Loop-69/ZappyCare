@@ -1,9 +1,18 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  ColumnFiltersState,
+  SortingState,
+  flexRender,
+} from "@tanstack/react-table";
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import PageLayout from "@/components/layout/PageLayout";
-import { DataTable } from "@/components/ui/data-table";
 import { getPatientColumns, PatientData } from "@/components/patients/PatientColumns"; // Import PatientData type
 import AddPatientDialog from "@/components/patients/AddPatientDialog";
 import { EditPatientDialog } from "@/components/patients/EditPatientDialog"; // Import EditPatientDialog
@@ -13,6 +22,15 @@ import { Search } from "lucide-react"; // Import Search icon
 import { Input } from "@/components/ui/input"; // Import Input component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
 import { Button } from "@/components/ui/button"; // Import Button component
+import { X, UserX, UserCheck, CalendarDays } from "lucide-react"; // Import icons for actions
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"; // Import table components
 
 const Patients = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -20,6 +38,9 @@ const Patients = () => {
   const [selectedPatient, setSelectedPatient] = useState<PatientData | null>(null); // State for selected patient
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [rowSelection, setRowSelection] = useState({}); // State for selected rows
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const navigate = useNavigate();
 
   const handleEditClick = (patient: PatientData) => {
@@ -55,13 +76,13 @@ const Patients = () => {
             updated_at
           `)
           .order("created_at", { ascending: false });
-        
+
         if (error) {
           toast.error("Failed to fetch patients");
           console.error("Error fetching patients:", error);
           return [];
         }
-        
+
         return data || [];
       } catch (error) {
         console.error("Unexpected error fetching patients:", error);
@@ -73,7 +94,7 @@ const Patients = () => {
 
   const filterPatients = (patients: PatientData[], term: string, status: string) => {
     return patients.filter(patient => {
-      const matchesSearch = term === "" || 
+      const matchesSearch = term === "" ||
                             patient.first_name.toLowerCase().includes(term.toLowerCase()) ||
                             patient.last_name.toLowerCase().includes(term.toLowerCase()) ||
                             patient.email?.toLowerCase().includes(term.toLowerCase()) ||
@@ -90,6 +111,45 @@ const Patients = () => {
     setIsAddDialogOpen(false);
     toast.success("Patient added successfully");
   };
+
+  const handleSuspendPatients = (patientIds: string[]) => {
+    console.log("Suspend patients:", patientIds);
+    // Implement suspend logic here
+    toast.info(`Suspending ${patientIds.length} patients...`);
+    setRowSelection({}); // Clear selection after action
+  };
+
+  const handleActivatePatients = (patientIds: string[]) => {
+    console.log("Activate patients:", patientIds);
+    // Implement activate logic here
+    toast.info(`Activating ${patientIds.length} patients...`);
+    setRowSelection({}); // Clear selection after action
+  };
+
+  const handleScheduleFollowUp = (patientIds: string[]) => {
+    console.log("Schedule follow-up for patients:", patientIds);
+    // Implement schedule follow-up logic here (e.g., open a modal)
+    toast.info(`Scheduling follow-up for ${patientIds.length} patients...`);
+    // setRowSelection({}); // Clear selection after action - maybe not clear immediately if modal opens
+  };
+
+  const table = useReactTable({
+    data: filteredPatients,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
+    onColumnFiltersChange: setColumnFilters,
+    getFilteredRowModel: getFilteredRowModel(),
+    state: {
+      sorting,
+      columnFilters,
+      rowSelection,
+    },
+    onRowSelectionChange: setRowSelection,
+  });
+
 
   return (
     <PageLayout
@@ -141,15 +201,78 @@ const Patients = () => {
           <Button variant="ghost">Advanced Filters</Button>
         </div>
 
+        {/* Action buttons when rows are selected */}
+        {Object.keys(rowSelection).length > 0 && (
+          <div className="flex items-center space-x-2 py-4">
+            <span className="text-sm text-muted-foreground">
+              {Object.keys(rowSelection).length} selected
+            </span>
+            <Button variant="outline" size="sm" onClick={() => handleSuspendPatients(Object.keys(rowSelection))}>
+              <UserX className="mr-2 h-4 w-4" />
+              Suspend
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleActivatePatients(Object.keys(rowSelection))}>
+              <UserCheck className="mr-2 h-4 w-4" />
+              Activate
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleScheduleFollowUp(Object.keys(rowSelection))}>
+              <CalendarDays className="mr-2 h-4 w-4" />
+              Schedule Follow-up
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setRowSelection({})}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+
         {/* Patient Table */}
-        <DataTable
-          columns={columns}
-          data={filteredPatients}
-          noDataMessage="No patients found"
-        />
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                    No patients found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
-      
-      <AddPatientDialog 
+
+      <AddPatientDialog
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
         onSuccess={handleAddSuccess}

@@ -18,55 +18,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-export const orderColumns: ColumnDef<Order>[] = [
-  {
-    accessorKey: "id",
-    header: "Order ID",
-    cell: ({ row }) => (
-      <div className="font-medium">
-        {row.getValue("id")}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "order_date",
-    header: "Order Date",
-    cell: ({ row }) => format(new Date(row.getValue("order_date")), "PP"),
-  },
-  {
-    accessorKey: "total_amount",
-    header: "Total Amount",
-    cell: ({ row }) => `$${parseFloat(String(row.getValue("total_amount"))).toFixed(2)}`,
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => {
-      const status = row.getValue("status") as string;
-      return (
-        <Badge 
-          variant={
-            status === "delivered" ? "default" :
-            status === "cancelled" ? "destructive" :
-            "secondary"
-          }
-        >
-          {status}
-        </Badge>
-      );
-    },
-  },
-  {
-    id: "actions",
-    header: "Actions",
-    cell: ({ row }) => {
-      const order = row.original;
-      
-      return <OrderActions order={order} />;
-    },
-  },
-];
-
 interface OrderActionsProps {
   order: Order;
 }
@@ -98,17 +49,17 @@ function OrderActions({ order }: OrderActionsProps) {
         .from('orders')
         .update({ status: 'cancelled' })
         .eq('id', order.id);
-      
+
       if (error) throw error;
-      
+
       toast({
         title: "Order Cancelled",
         description: `Order ${order.id.substring(0, 8)}... has been cancelled successfully.`,
       });
-      
+
       // Close the dialog
       setIsCancelDialogOpen(false);
-      
+
       // This will cause the table to refresh
       window.dispatchEvent(new CustomEvent('refetch-orders'));
     } catch (error) {
@@ -136,10 +87,10 @@ function OrderActions({ order }: OrderActionsProps) {
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           <DropdownMenuItem onClick={handleViewDetails}>View Details</DropdownMenuItem>
           <DropdownMenuItem onClick={handleEditOrder}>Edit Order</DropdownMenuItem>
-          <DropdownMenuItem 
+          <DropdownMenuItem
             onClick={() => setIsCancelDialogOpen(true)}
-            disabled={order.status === "cancelled" || order.status === "delivered"}
-            className={order.status === "cancelled" || order.status === "delivered" ? "text-muted-foreground" : "text-red-500"}
+            disabled={order.status === "cancelled" || order.status === "shipped"}
+            className={order.status === "cancelled" || order.status === "shipped" ? "text-muted-foreground" : "text-red-500"}
           >
             Cancel Order
           </DropdownMenuItem>
@@ -159,12 +110,12 @@ function OrderActions({ order }: OrderActionsProps) {
             <div className="grid grid-cols-2 gap-2">
               <div className="font-medium">Order Date:</div>
               <div>{format(new Date(order.order_date), "PPP")}</div>
-              
+
               <div className="font-medium">Status:</div>
               <div>
-                <Badge 
+                <Badge
                   variant={
-                    order.status === "delivered" ? "default" :
+                    order.status === "shipped" ? "default" :
                     order.status === "cancelled" ? "destructive" :
                     "secondary"
                   }
@@ -172,10 +123,10 @@ function OrderActions({ order }: OrderActionsProps) {
                   {order.status}
                 </Badge>
               </div>
-              
+
               <div className="font-medium">Total Amount:</div>
               <div>${order.total_amount.toFixed(2)}</div>
-              
+
               <div className="font-medium">Payment Method:</div>
               <div>{order.payment_method || "Not specified"}</div>
 
@@ -203,15 +154,15 @@ function OrderActions({ order }: OrderActionsProps) {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setIsCancelDialogOpen(false)}
               disabled={isProcessing}
             >
               Cancel
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={handleCancelOrder}
               disabled={isProcessing}
             >
@@ -223,3 +174,210 @@ function OrderActions({ order }: OrderActionsProps) {
     </>
   );
 }
+
+
+export const pendingOrderColumns: ColumnDef<Order>[] = [
+  {
+    accessorKey: "order_date",
+    header: "ORDER DATE",
+    cell: ({ row }) => format(new Date(row.getValue("order_date")), "PP"),
+  },
+  {
+    accessorKey: "patient_id", // Assuming patient_id can be used to display patient name
+    header: "PATIENT",
+    cell: ({ row }) => (
+      <div className="font-medium">
+        {row.getValue("patient_id")}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "medication",
+    header: "MEDICATION",
+    cell: ({ row }) => (
+      <div className="font-medium">
+        {row.getValue("medication")}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "status",
+    header: "STATUS",
+    cell: ({ row }) => {
+      const status = row.getValue("status") as string;
+      return (
+        <Badge
+          variant={
+            status === "shipped" ? "default" :
+            status === "cancelled" ? "destructive" :
+            "secondary"
+          }
+        >
+          {status}
+        </Badge>
+      );
+    },
+  },
+  {
+    accessorKey: "session_id", // Assuming session_id can be used for linked session
+    header: "LINKED SESSION",
+    cell: ({ row }) => (
+      <div className="font-medium">
+        {row.getValue("session_id")}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "pharmacy_id", // Assuming pharmacy_id can be used for pharmacy name
+    header: "PHARMACY",
+    cell: ({ row }) => (
+      <div className="font-medium">
+        {row.getValue("pharmacy_id")}
+      </div>
+    ),
+  },
+  {
+    id: "actions",
+    header: "ACTIONS",
+    cell: ({ row }) => {
+      const order = row.original;
+      return <OrderActions order={order} />;
+    },
+  },
+];
+
+export const processingOrderColumns: ColumnDef<Order>[] = [
+  {
+    accessorKey: "order_date",
+    header: "ORDER DATE",
+    cell: ({ row }) => format(new Date(row.getValue("order_date")), "PP"),
+  },
+  {
+    accessorKey: "patient_id", // Assuming patient_id can be used to display patient name
+    header: "PATIENT",
+    cell: ({ row }) => (
+      <div className="font-medium">
+        {row.getValue("patient_id")}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "medication",
+    header: "MEDICATION",
+    cell: ({ row }) => (
+      <div className="font-medium">
+        {row.getValue("medication")}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "status",
+    header: "STATUS",
+    cell: ({ row }) => {
+      const status = row.getValue("status") as string;
+      return (
+        <Badge
+          variant={
+            status === "shipped" ? "default" :
+            status === "cancelled" ? "destructive" :
+            "secondary"
+          }
+        >
+          {status}
+        </Badge>
+      );
+    },
+  },
+  {
+    accessorKey: "pharmacy_id", // Assuming pharmacy_id can be used for pharmacy name
+    header: "PHARMACY",
+    cell: ({ row }) => (
+      <div className="font-medium">
+        {row.getValue("pharmacy_id")}
+      </div>
+    ),
+  },
+  {
+    id: "actions",
+    header: "ACTIONS",
+    cell: ({ row }) => {
+      const order = row.original;
+      return <OrderActions order={order} />;
+    },
+  },
+];
+
+export const shippedOrderColumns: ColumnDef<Order>[] = [
+  {
+    accessorKey: "order_date",
+    header: "ORDER DATE",
+    cell: ({ row }) => format(new Date(row.getValue("order_date")), "PP"),
+  },
+  {
+    accessorKey: "patient_id", // Assuming patient_id can be used to display patient name
+    header: "PATIENT",
+    cell: ({ row }) => (
+      <div className="font-medium">
+        {row.getValue("patient_id")}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "medication",
+    header: "MEDICATION",
+    cell: ({ row }) => (
+      <div className="font-medium">
+        {row.getValue("medication")}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "status",
+    header: "STATUS",
+    cell: ({ row }) => {
+      const status = row.getValue("status") as string;
+      return (
+        <Badge
+          variant={
+            status === "shipped" ? "default" :
+            status === "cancelled" ? "destructive" :
+            "secondary"
+          }
+        >
+          {status}
+        </Badge>
+      );
+    },
+  },
+  {
+    accessorKey: "tracking", // Assuming 'tracking' field exists in Order type
+    header: "TRACKING",
+    cell: ({ row }) => (
+      <div className="font-medium">
+        {/* Display tracking information */}
+        {/* row.getValue("tracking") */}
+        N/A
+      </div>
+    ),
+  },
+  {
+    accessorKey: "est_delivery", // Assuming 'est_delivery' field exists in Order type
+    header: "EST. DELIVERY",
+    cell: ({ row }) => (
+      <div className="font-medium">
+        {/* Display estimated delivery date */}
+        {/* row.getValue("est_delivery") */}
+        N/A
+      </div>
+    ),
+  },
+  {
+    accessorKey: "pharmacy_id", // Assuming pharmacy_id can be used for pharmacy name
+    header: "PHARMACY",
+    cell: ({ row }) => (
+      <div className="font-medium">
+        {row.getValue("pharmacy_id")}
+      </div>
+    ),
+  },
+];
