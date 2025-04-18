@@ -86,8 +86,8 @@ const AddPatientDialog = ({ open, onOpenChange, onSuccess }: AddPatientDialogPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader className="sticky top-0 bg-background z-10">
           <DialogTitle>Add New Patient</DialogTitle>
           <DialogDescription>
             Enter the patient details below to create a new patient record.
@@ -95,9 +95,11 @@ const AddPatientDialog = ({ open, onOpenChange, onSuccess }: AddPatientDialogPro
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            <PatientPersonalDetails form={form} />
-            <PatientAddressDetails form={form} />
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 px-1">
+            <div className="space-y-6">
+              <PatientPersonalDetails form={form} />
+              <PatientAddressDetails form={form} />
+            </div>
             
             <DialogFooter>
               <Button 
