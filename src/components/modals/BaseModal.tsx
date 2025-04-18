@@ -28,6 +28,7 @@ interface BaseModalProps {
     onClick: () => void;
     disabled?: boolean;
   };
+  showCloseButton?: boolean;
 }
 
 const sizes = {
@@ -47,6 +48,7 @@ export const BaseModal = ({
   size = "md",
   primaryAction,
   secondaryAction,
+  showCloseButton = true,
 }: BaseModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -54,14 +56,16 @@ export const BaseModal = ({
         <DialogHeader className="p-6 pb-2">
           <div className="flex items-center justify-between">
             <DialogTitle>{title}</DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={onClose}
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            {showCloseButton && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={onClose}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </DialogHeader>
         

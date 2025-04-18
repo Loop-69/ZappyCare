@@ -124,6 +124,7 @@ export const AddPharmacyDialog = ({ isOpen, onClose }: AddPharmacyDialogProps) =
         label: "Cancel",
         onClick: onClose,
       }}
+      showCloseButton={false}
     >
       <Form {...form}>
         <form className="space-y-6" onSubmit={form.handleSubmit(handleSubmit)}>

@@ -43,6 +43,8 @@ import ShippingTest from "./pages/AIDashboard/ShippingTest"; // Import sub-page
 import SendGridTest from "./pages/AIDashboard/SendGridTest"; // Import sub-page
 import PracticeBetterTest from "./pages/AIDashboard/PracticeBetterTest"; // Import sub-page
 import GeneralAITest from "./pages/AIDashboard/GeneralAITest"; // Import sub-page
+import CSVIntegrationTest from "./pages/AIDashboard/CSVIntegrationTest"; // Import new sub-page
+import WordIntegrationTest from "./pages/AIDashboard/WordIntegrationTest"; // Import new sub-page
 
 
 const queryClient = new QueryClient();
@@ -93,6 +95,8 @@ function App() {
                     <Route path="sendgrid" element={<SendGridTest />} />
                     <Route path="practice-better" element={<PracticeBetterTest />} />
                     <Route path="general-ai" element={<GeneralAITest />} />
+                    <Route path="csv-integration" element={<CSVIntegrationTest />} /> {/* Add new nested route */}
+                    <Route path="word-integration" element={<WordIntegrationTest />} /> {/* Add new nested route */}
                     {/* Add a default route for /ai-dashboard if needed */}
                      <Route index element={<div>Select a test from the sidebar</div>} /> {/* Added a default index route */}
                   </Route>

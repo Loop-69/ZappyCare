@@ -196,4 +196,61 @@ export const sidebarRoutes: SidebarRoute[] = [
     color: "text-blue-500",
     bgColor: "bg-blue-50",
   },
+  // AI Dashboard Sub-pages
+  {
+    href: "/ai-dashboard/boothwyn",
+    label: "Boothwyn Test",
+    icon: <BrainCircuit className="h-5 w-5" />,
+    color: "text-purple-500", // Consistent color for AI Dashboard sub-pages
+    bgColor: "bg-purple-50",
+  },
+  {
+    href: "/ai-dashboard/hallandale",
+    label: "Hallandale / VIOS Test",
+    icon: <BrainCircuit className="h-5 w-5" />,
+    color: "text-purple-500",
+    bgColor: "bg-purple-50",
+  },
+  {
+    href: "/ai-dashboard/shipping",
+    label: "Shipping Test",
+    icon: <BrainCircuit className="h-5 w-5" />,
+    color: "text-purple-500",
+    bgColor: "bg-purple-50",
+  },
+  {
+    href: "/ai-dashboard/sendgrid",
+    label: "SendGrid Test",
+    icon: <BrainCircuit className="h-5 w-5" />,
+    color: "text-purple-500",
+    bgColor: "bg-purple-50",
+  },
+  {
+    href: "/ai-dashboard/practice-better",
+    label: "Practice Better Test",
+    icon: <BrainCircuit className="h-5 w-5" />,
+    color: "text-purple-500",
+    bgColor: "bg-purple-50",
+  },
+  {
+    href: "/ai-dashboard/general-ai",
+    label: "General AI Test",
+    icon: <BrainCircuit className="h-5 w-5" />,
+    color: "text-purple-500",
+    bgColor: "bg-purple-50",
+  },
+  {
+    href: "/ai-dashboard/csv-integration", // New route for CSV integration
+    label: "CSV Integration Test",
+    icon: <BrainCircuit className="h-5 w-5" />,
+    color: "text-purple-500",
+    bgColor: "bg-purple-50",
+  },
+  {
+    href: "/ai-dashboard/word-integration", // New route for Word integration
+    label: "Word Integration Test",
+    icon: <BrainCircuit className="h-5 w-5" />,
+    color: "text-purple-500",
+    bgColor: "bg-purple-50",
+  },
 ];
