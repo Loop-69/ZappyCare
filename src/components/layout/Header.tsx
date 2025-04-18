@@ -1,5 +1,5 @@
 
-import { Bell, ShoppingCart, Search, User, LayoutDashboard } from "lucide-react";
+import { Bell, Eye, Search, User, LayoutDashboard } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -25,14 +25,14 @@ const Header = ({ user = { name: "Admin", role: "Admin" } }: HeaderProps) => {
   const navigate = useNavigate();
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-white px-6">
       <div className="w-[300px]">
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input 
             type="search" 
-            placeholder="Search..." 
-            className="pl-8 w-full bg-background border-muted rounded-md"
+            placeholder="Search Patients..." 
+            className="pl-8 w-full bg-white border-muted rounded-md"
           />
         </div>
       </div>
@@ -40,8 +40,9 @@ const Header = ({ user = { name: "Admin", role: "Admin" } }: HeaderProps) => {
       <div className="flex items-center gap-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative">
-              <LayoutDashboard className="h-5 w-5" />
+            <Button variant="outline" size="sm" className="relative gap-2">
+              <Eye className="h-4 w-4" />
+              <span>Admin View</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
@@ -61,10 +62,6 @@ const Header = ({ user = { name: "Admin", role: "Admin" } }: HeaderProps) => {
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-        </Button>
-        
-        <Button variant="ghost" size="icon">
-          <ShoppingCart className="h-5 w-5" />
         </Button>
         
         <DropdownMenu>

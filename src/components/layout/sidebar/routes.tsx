@@ -27,6 +27,7 @@ export interface SidebarRoute {
   color: string;
   bgColor: string;
   isAdminOnly?: boolean;
+  isPatientOnly?: boolean;
 }
 
 export const sidebarRoutes: SidebarRoute[] = [
@@ -43,6 +44,7 @@ export const sidebarRoutes: SidebarRoute[] = [
     icon: <ClipboardList className="h-5 w-5" />,
     color: "text-emerald-500",
     bgColor: "bg-emerald-50",
+    isPatientOnly: true,
   },
   {
     href: "/programs",
@@ -50,6 +52,7 @@ export const sidebarRoutes: SidebarRoute[] = [
     icon: <Grid3X3 className="h-5 w-5" />,
     color: "text-purple-500",
     bgColor: "bg-purple-50",
+    isPatientOnly: true,
   },
   {
     href: "/shop",
@@ -57,6 +60,7 @@ export const sidebarRoutes: SidebarRoute[] = [
     icon: <ShoppingCart className="h-5 w-5" />,
     color: "text-orange-500",
     bgColor: "bg-orange-50",
+    isPatientOnly: true,
   },
   {
     href: "/dashboard",

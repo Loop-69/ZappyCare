@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 type PageLayoutProps = {
   children: React.ReactNode;
   title: string;
-  description?: string; // Added optional description prop
+  description?: string;
   action?: {
     label: string;
     onClick: () => void;
@@ -24,7 +24,7 @@ type PageLayoutProps = {
 const PageLayout = ({
   children,
   title,
-  description, // Added description prop
+  description,
   action,
   isLoading = false,
   filters,
@@ -34,8 +34,10 @@ const PageLayout = ({
     <div className={cn("p-6 space-y-6", className)}>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{title}</h1>
-          {description && <p className="text-muted-foreground mt-1">{description}</p>}
+          <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
+          {description && (
+            <p className="text-muted-foreground mt-1 text-sm italic">{description}</p>
+          )}
         </div>
         
         {action && (
@@ -64,7 +66,7 @@ const PageLayout = ({
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow">{children}</div>
+        children
       )}
     </div>
   );

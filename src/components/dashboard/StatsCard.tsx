@@ -11,6 +11,7 @@ interface StatsCardProps {
     value: string;
     positive: boolean;
   };
+  type?: 'patients' | 'sessions' | 'orders' | 'consultations';
 }
 
 export const StatsCard = ({
@@ -20,9 +21,40 @@ export const StatsCard = ({
   icon,
   className,
   trend,
+  type = 'patients',
 }: StatsCardProps) => {
+  // Map type to color classes
+  const colorMap = {
+    patients: {
+      iconBg: 'bg-red-50',
+      iconColor: 'text-stats-patients',
+      borderColor: 'border-l-stats-patients'
+    },
+    sessions: {
+      iconBg: 'bg-blue-50',
+      iconColor: 'text-stats-sessions',
+      borderColor: 'border-l-stats-sessions'
+    },
+    orders: {
+      iconBg: 'bg-green-50',
+      iconColor: 'text-stats-orders',
+      borderColor: 'border-l-stats-orders'
+    },
+    consultations: {
+      iconBg: 'bg-orange-50',
+      iconColor: 'text-stats-consultations',
+      borderColor: 'border-l-stats-consultations'
+    }
+  };
+
+  const { iconBg, iconColor, borderColor } = colorMap[type];
+
   return (
-    <div className={cn("p-6 bg-white rounded-lg shadow-sm", className)}>
+    <div className={cn(
+      "p-6 bg-white rounded-lg shadow-sm border-l-4", 
+      borderColor,
+      className
+    )}>
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
@@ -44,7 +76,15 @@ export const StatsCard = ({
             </div>
           )}
         </div>
-        {icon && <div className="text-primary">{icon}</div>}
+        {icon && (
+          <div className={cn(
+            "flex items-center justify-center w-12 h-12 rounded-full", 
+            iconBg, 
+            iconColor
+          )}>
+            {icon}
+          </div>
+        )}
       </div>
     </div>
   );

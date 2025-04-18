@@ -61,6 +61,12 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				stats: {
+					patients: 'hsl(var(--stats-patients))',
+					sessions: 'hsl(var(--stats-sessions))',
+					orders: 'hsl(var(--stats-orders))',
+					consultations: 'hsl(var(--stats-consultations))'
 				}
 			},
 			borderRadius: {

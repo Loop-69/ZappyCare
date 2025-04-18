@@ -16,7 +16,10 @@ const Dashboard = () => {
   } = useDashboardData();
 
   return (
-    <PageLayout title="Provider Dashboard">
+    <PageLayout 
+      title="Provider Dashboard"
+      description="Supporting your patients' health journey"
+    >
       <DashboardContent 
         patientsCount={patientsCount}
         todaySessions={todaySessions}

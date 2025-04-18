@@ -7,12 +7,13 @@ import {
   ShoppingCart,
   MessagesSquare,
 } from "lucide-react";
+import type { Session, Consultation } from "@/types";
 
 interface DashboardStatsProps {
   patientsCount: number | null;
-  todaySessions: any[] | null;
+  todaySessions: Session[] | null;
   pendingOrders: number | null;
-  newConsultations: any[] | null;
+  newConsultations: Consultation[] | null;
   isLoading: boolean;
 }
 
@@ -29,28 +30,32 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
       title: "Total Patients",
       value: isLoading ? "-" : patientsCount,
       trend: { value: "12%", positive: true },
-      icon: <Users size={24} />,
+      icon: <Users size={20} />,
+      type: 'patients' as const
     },
     {
-      title: "Today's Sessions",
+      title: "Upcoming Sessions",
       value: isLoading ? "-" : (todaySessions?.length || 0),
       subtitle: (todaySessions?.length || 0) === 0 ? "No sessions today" : 
         (todaySessions?.length || 0) === 1 ? "1 session today" : `${todaySessions?.length} sessions today`,
-      icon: <CalendarClock size={24} />,
+      icon: <CalendarClock size={20} />,
+      type: 'sessions' as const
     },
     {
       title: "Pending Orders",
       value: isLoading ? "-" : pendingOrders || 0,
       subtitle: (pendingOrders || 0) === 0 ? "No pending orders" : 
-        (pendingOrders || 0) === 1 ? "1 order pending" : `${pendingOrders} orders pending`,
-      icon: <ShoppingCart size={24} />,
+        (pendingOrders || 0) === 1 ? "1 awaiting approval" : `${pendingOrders} awaiting approval`,
+      icon: <ShoppingCart size={20} />,
+      type: 'orders' as const
     },
     {
       title: "New Consultations",
       value: isLoading ? "-" : (newConsultations?.length || 0),
       subtitle: (newConsultations?.length || 0) === 0 ? "No new consultations" : 
-        (newConsultations?.length || 0) === 1 ? "1 needs review" : `${newConsultations?.length} need review`,
-      icon: <MessagesSquare size={24} />,
+        (newConsultations?.length || 0) === 1 ? "1 need review" : `${newConsultations?.length} need review`,
+      icon: <MessagesSquare size={20} />,
+      type: 'consultations' as const
     },
   ];
 
