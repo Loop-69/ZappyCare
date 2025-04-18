@@ -85,7 +85,7 @@ function App() {
                   <Route path="/patients-dashboard" element={<PatientsDashboard />} />
                   
                   {/* AI Dashboard Routes */}
-                  <Route path="/ai-dashboard" element={<AIDashboard />}>
+                  <Route path="/ai-dashboard" element={<AIDashboard />}> {/* Parent route with AIDashboard as element */}
                     {/* Nested routes for sub-pages */}
                     <Route path="boothwyn" element={<BoothwynTest />} />
                     <Route path="hallandale" element={<HallandaleTest />} />
@@ -94,7 +94,7 @@ function App() {
                     <Route path="practice-better" element={<PracticeBetterTest />} />
                     <Route path="general-ai" element={<GeneralAITest />} />
                     {/* Add a default route for /ai-dashboard if needed */}
-                    {/* <Route index element={<div>Select a test from the sidebar</div>} /> */}
+                     <Route index element={<div>Select a test from the sidebar</div>} /> {/* Added a default index route */}
                   </Route>
 
                   <Route path="*" element={<NotFound />} />

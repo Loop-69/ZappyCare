@@ -14,13 +14,21 @@ export function Navigation({ routes }: NavigationProps) {
                             location.pathname === '/records' ||
                             location.pathname === '/programs' ||
                             location.pathname === '/shop';
+  const isAIDashboard = location.pathname.startsWith('/ai-dashboard'); // Check if on AI Dashboard
 
   // Filter routes based on the current dashboard
-  const filteredRoutes = routes.filter(route => 
-    isPatientDashboard 
-      ? !route.isAdminOnly && (route.isPatientOnly || ["/"].includes(route.href))
-      : !route.isPatientOnly && !route.href.startsWith('/patients-dashboard')
-  );
+  const filteredRoutes = routes.filter(route => {
+    if (isAIDashboard) {
+      // If on AI Dashboard, only show AI Dashboard routes
+      return route.href.startsWith('/ai-dashboard');
+    } else if (isPatientDashboard) {
+      // If on Patient Dashboard, apply existing patient filtering
+      return !route.isAdminOnly && (route.isPatientOnly || ["/"].includes(route.href));
+    } else {
+      // Otherwise (Admin Dashboard), apply existing admin filtering
+      return !route.isPatientOnly && !route.href.startsWith('/patients-dashboard');
+    }
+  });
 
   return (
     <ScrollArea className="flex-1">

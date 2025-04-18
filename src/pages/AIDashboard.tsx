@@ -1,4 +1,5 @@
 import React from 'react';
+import { Outlet } from 'react-router-dom'; // Import Outlet
 import PageLayout from "@/components/layout/PageLayout";
 
 const AIDashboard = () => {
@@ -7,10 +8,13 @@ const AIDashboard = () => {
       title="AI Dashboard"
       description="Manage and test AI and API integrations."
     >
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Welcome to the AI Dashboard</h2>
+      <div className="space-y-6"> {/* Added a div for spacing */}
+        <h2 className="text-2xl font-bold">AI Dashboard</h2> {/* Simplified title */}
         <p>Select an integration or AI feature from the sidebar to test and manage it.</p>
-        {/* TODO: Add navigation to sub-pages */}
+        
+        <Outlet /> {/* Add Outlet here to render nested routes */}
+        
+        {/* TODO: Add navigation to sub-pages within the dashboard content if needed */}
       </div>
     </PageLayout>
   );
