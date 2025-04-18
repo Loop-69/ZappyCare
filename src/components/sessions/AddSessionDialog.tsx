@@ -51,8 +51,7 @@ const formSchema = z.object({
   scheduled_date: z.date({
     required_error: "Please select a date and time",
   }),
-  duration_minutes: z.coerce.number().min(15).max(180),
-  session_type: z.enum(["video", "phone", "in-person"]),
+  session_type: z.enum(["Medical", "Psych"]),
   notes: z.string().optional(),
   status: z.enum(["scheduled", "completed", "cancelled", "no-show"]),
 });
@@ -75,8 +74,7 @@ export default function AddSessionDialog({
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      duration_minutes: 60,
-      session_type: "video",
+      session_type: "Medical",
       status: "scheduled",
     },
   });
@@ -108,7 +106,6 @@ export default function AddSessionDialog({
         patient_id: values.patient_id,
         scheduled_date: date.toISOString(),
         status: values.status,
-        duration_minutes: values.duration_minutes,
         session_type: values.session_type,
         notes: values.notes,
       };
@@ -186,171 +183,112 @@ export default function AddSessionDialog({
                     </SelectContent>
                   </Select>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
+            </FormItem>
+          )}
+        />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="scheduled_date"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-background z-50" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) =>
-                            date < new Date(new Date().setHours(0, 0, 0, 0))
-                          }
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormItem>
-                <FormLabel>Time</FormLabel>
-                <Select 
-                  value={selectedTime}
-                  onValueChange={setSelectedTime}
+        <FormField
+          control={form.control}
+          name="session_type"
+          render={({ field }) => (
+            <FormItem className="space-y-3">
+              <FormLabel>Session Type</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  className="flex space-x-2"
                 >
-                  <SelectTrigger>
-                    <div className="flex items-center">
-                      <Clock className="mr-2 h-4 w-4" />
-                      <span>{selectedTime}</span>
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent className="h-[200px]">
-                    {timeSlots.map((time) => (
-                      <SelectItem key={time} value={time}>
-                        {time}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormItem>
-            </div>
-
-            <FormField
-              control={form.control}
-              name="duration_minutes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Duration (minutes)</FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(parseInt(value))} 
-                    defaultValue={field.value.toString()}
-                  >
+                  <FormItem className="flex items-center space-x-1 space-y-0">
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select duration" />
-                      </SelectTrigger>
+                      <RadioGroupItem value="Medical" />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="15">15 minutes</SelectItem>
-                      <SelectItem value="30">30 minutes</SelectItem>
-                      <SelectItem value="45">45 minutes</SelectItem>
-                      <SelectItem value="60">60 minutes (1 hour)</SelectItem>
-                      <SelectItem value="90">90 minutes (1.5 hours)</SelectItem>
-                      <SelectItem value="120">120 minutes (2 hours)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormLabel className="font-normal">Medical</FormLabel>
+                  </FormItem>
+                  <FormItem className="flex items-center space-x-1 space-y-0">
+                    <FormControl>
+                      <RadioGroupItem value="Psych" />
+                    </FormControl>
+                    <FormLabel className="font-normal">Psych</FormLabel>
+                  </FormItem>
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-            <FormField
-              control={form.control}
-              name="session_type"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>Session Type</FormLabel>
+        <FormField
+          control={form.control}
+          name="scheduled_date"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Select date</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
                   <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex space-x-2"
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
                     >
-                      <FormItem className="flex items-center space-x-1 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="video" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Video</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-1 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="phone" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Phone</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-1 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="in-person" />
-                        </FormControl>
-                        <FormLabel className="font-normal">In-person</FormLabel>
-                      </FormItem>
-                    </RadioGroup>
+                      {field.value ? (
+                        format(field.value, "PPP")
+                      ) : (
+                        <span>Select date</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 bg-background z-50" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    disabled={(date) =>
+                      date < new Date(new Date().setHours(0, 0, 0, 0))
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Add any additional notes about this session..."
-                      className="resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending ? "Scheduling..." : "Schedule Session"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Notes</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Add any relevant notes about this session..."
+                  className="resize-none"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={mutation.isPending}>
+            Schedule
+          </Button>
+        </DialogFooter>
+      </form>
+    </Form>
+  </DialogContent>
+</Dialog>
   );
 }
