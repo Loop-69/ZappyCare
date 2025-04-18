@@ -6,10 +6,9 @@ const AIDashboard = () => {
   return (
     <PageLayout
       title="AI Dashboard"
-      description="Manage and test AI and API integrations."
+    description="Manage and test AI and API integrations."
     >
       <div className="space-y-6"> {/* Added a div for spacing */}
-        <h2 className="text-2xl font-bold">AI Dashboard</h2> {/* Simplified title */}
         <p>Select an integration or AI feature from the sidebar to test and manage it.</p>
         
         <Outlet /> {/* Add Outlet here to render nested routes */}

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useDrop } from "react-dnd";
 import { FormField } from "@/pages/FormBuilder";
@@ -7,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormFieldPreview } from "./FormFieldPreview";
 import { FormHeaderEditor } from "./FormHeaderEditor";
+import { Button } from "@/components/ui/button"; // Import Button component
+import { Plus } from "lucide-react"; // Import Plus icon
 
 interface FormBuilderCanvasProps {
   formData: {
@@ -18,6 +19,12 @@ interface FormBuilderCanvasProps {
   onFieldsChange: (fields: FormField[]) => void;
 }
 
+interface DroppedItem {
+  type: string;
+  label: string;
+  defaultProps?: any; // TODO: Define a more specific type for defaultProps
+}
+
 export function FormBuilderCanvas({
   formData,
   onFormDataChange,
@@ -25,7 +32,7 @@ export function FormBuilderCanvas({
 }: FormBuilderCanvasProps) {
   const [{ isOver }, drop] = useDrop(() => ({
     accept: "FORM_FIELD",
-    drop: (item: any, monitor) => {
+    drop: (item: DroppedItem, monitor) => {
       const didDrop = monitor.didDrop();
       if (didDrop) {
         return;
@@ -82,32 +89,42 @@ export function FormBuilderCanvas({
         onDescriptionChange={(value) => onFormDataChange("description", value)}
       />
       
-      {/* Fields Drop Area */}
-      <div 
-        ref={drop}
-        className={`mt-8 min-h-[300px] p-4 border-2 border-dashed rounded-lg ${
-          isOver ? "bg-blue-50 border-blue-300" : "bg-gray-50 border-gray-300"
-        }`}
-      >
-        {formData.fields.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-56 text-center text-gray-400">
-            <p className="mb-2">Drag form elements here</p>
-            <p className="text-sm">or click elements from the sidebar</p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {formData.fields.map((field, index) => (
-              <FormFieldPreview
-                key={field.id}
-                field={field}
-                index={index}
-                onUpdate={handleFieldUpdate}
-                onDelete={handleFieldDelete}
-                moveField={moveField}
-              />
-            ))}
-          </div>
-        )}
+      {/* Pages and Fields Area */}
+      <div className="mt-8">
+        <div className="flex items-center gap-2 mb-4">
+          <h3 className="text-lg font-medium">Page 1</h3>
+          <Button variant="outline" size="icon" className="h-7 w-7">
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Fields Drop Area */}
+        <div 
+          ref={drop}
+          className={`min-h-[300px] p-4 border-2 border-dashed rounded-lg ${
+            isOver ? "bg-blue-50 border-blue-300" : "bg-gray-50 border-gray-300"
+          }`}
+        >
+          {formData.fields.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-56 text-center text-gray-400">
+              <p className="mb-2">Drag form elements here</p>
+              <p className="text-sm">or click elements from the sidebar</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {formData.fields.map((field, index) => (
+                <FormFieldPreview
+                  key={field.id}
+                  field={field}
+                  index={index}
+                  onUpdate={handleFieldUpdate}
+                  onDelete={handleFieldDelete}
+                  moveField={moveField}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

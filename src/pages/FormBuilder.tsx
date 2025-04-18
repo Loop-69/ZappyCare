@@ -72,7 +72,7 @@ export default function FormBuilder() {
 
   return (
     <PageLayout
-      title="Form Builder"
+      title={`Form Builder: ${formData.title}`}
       description="Create and customize form templates with drag-and-drop"
     >
       <div className="flex justify-end mb-4 gap-2">
@@ -83,7 +83,7 @@ export default function FormBuilder() {
           onClick={handleSave} 
           disabled={saving}
         >
-          {saving ? "Saving..." : "Save Form"}
+          {saving ? "Creating..." : "Create Form"}
         </Button>
       </div>
       
