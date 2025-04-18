@@ -22,11 +22,11 @@ export function Navigation({ routes }: NavigationProps) {
       // If on AI Dashboard, only show AI Dashboard routes
       return route.href.startsWith('/ai-dashboard');
     } else if (isPatientDashboard) {
-      // If on Patient Dashboard, apply existing patient filtering
-      return !route.isAdminOnly && (route.isPatientOnly || ["/"].includes(route.href));
+      // If on Patient Dashboard, apply existing patient filtering and exclude AI Dashboard routes
+      return !route.isAdminOnly && (route.isPatientOnly || ["/"].includes(route.href)) && !route.href.startsWith('/ai-dashboard');
     } else {
-      // Otherwise (Admin Dashboard), apply existing admin filtering
-      return !route.isPatientOnly && !route.href.startsWith('/patients-dashboard');
+      // Otherwise (Admin Dashboard), apply existing admin filtering and exclude AI Dashboard routes
+      return !route.isPatientOnly && !route.href.startsWith('/patients-dashboard') && !route.href.startsWith('/ai-dashboard');
     }
   });
 
