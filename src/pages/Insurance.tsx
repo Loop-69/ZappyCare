@@ -89,7 +89,7 @@ export default function Insurance() {
       />
 
       <AddInsuranceDialog
-        open={isDialogOpen}
+        isOpen={isDialogOpen}
         onClose={handleDialogClose}
         onSuccess={handleSuccess}
       />

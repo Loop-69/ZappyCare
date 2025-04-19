@@ -10,9 +10,13 @@ import { MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
+import { EditInsuranceDialog } from "./EditInsuranceDialog";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const InsuranceActions = ({ record }) => {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -34,30 +38,42 @@ export const InsuranceActions = ({ record }) => {
   };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0">
-          <span className="sr-only">Open menu</span>
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem 
-          className="cursor-pointer" 
-          onSelect={(e) => e.preventDefault()}
-          onClick={() => {/* Edit functionality */}}
-        >
-          <Edit className="mr-2 h-4 w-4" /> Edit
-        </DropdownMenuItem>
-        <DropdownMenuItem 
-          className="cursor-pointer text-destructive" 
-          onSelect={(e) => e.preventDefault()}
-          onClick={handleDelete}
-          disabled={isDeleting}
-        >
-          <Trash2 className="mr-2 h-4 w-4" /> Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem 
+            className="cursor-pointer" 
+            onSelect={(e) => e.preventDefault()}
+            onClick={() => setIsEditDialogOpen(true)}
+          >
+            <Edit className="mr-2 h-4 w-4" /> Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            className="cursor-pointer text-destructive" 
+            onSelect={(e) => e.preventDefault()}
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            <Trash2 className="mr-2 h-4 w-4" /> Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <EditInsuranceDialog
+        open={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        onSuccess={() => {
+          setIsEditDialogOpen(false);
+          queryClient.invalidateQueries({ queryKey: ['insurance_records'] });
+        }}
+        record={record}
+      />
+    </>
   );
 };

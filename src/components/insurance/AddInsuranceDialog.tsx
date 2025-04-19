@@ -6,7 +6,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner"; // Using sonner for toasts
 
-import { BaseModal } from "@/components/modals/BaseModal";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -140,24 +147,13 @@ export const AddInsuranceDialog = ({ isOpen, onClose, onSuccess }: AddInsuranceD
   };
 
   return (
-    <BaseModal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Add Insurance Record"
-      primaryAction={{
-        label: "Add Insurance Record",
-        onClick: form.handleSubmit(handleSubmit),
-        loading: addInsuranceMutation.isPending,
-        className: "bg-purple-600 hover:bg-purple-700", // Purple button
-      }}
-      secondaryAction={{
-        label: "Cancel",
-        onClick: onClose,
-        variant: "outline", // Outline button
-      }}
-    >
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[800px]">
+        <DialogHeader>
+          <DialogTitle>Add Insurance Record</DialogTitle>
+        </DialogHeader>
       <Form {...form}>
-        <form className="grid grid-cols-2 gap-4"> {/* Two-column layout */}
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="grid grid-cols-2 gap-4"> {/* Two-column layout */}
           <FormField
             control={form.control}
             name="patient_id"
@@ -342,8 +338,26 @@ export const AddInsuranceDialog = ({ isOpen, onClose, onSuccess }: AddInsuranceD
               </FormItem>
             )}
           />
+          <DialogFooter className="mt-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="mr-2"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={addInsuranceMutation.isPending}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              {addInsuranceMutation.isPending ? "Adding..." : "Add Insurance Record"}
+            </Button>
+          </DialogFooter>
         </form>
       </Form>
-    </BaseModal>
+      </DialogContent>
+    </Dialog>
   );
 };
