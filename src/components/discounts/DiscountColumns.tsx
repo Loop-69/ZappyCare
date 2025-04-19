@@ -3,118 +3,126 @@ import { Discount } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Pencil, Trash } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useState } from "react";
-import { EditDiscountDialog } from "./EditDiscountDialog";
+import { Pencil, Trash } from "lucide-react"; // Removed MoreHorizontal and DropdownMenu imports
 
-const DiscountColumns: ColumnDef<Discount>[] = [
-  {
-    accessorKey: "name",
-    header: "Name",
-    cell: ({ row }) => {
-      const discount = row.original;
-      return (
-        <div className="font-medium">
-          {discount.name}
-          {discount.status === 'Inactive' && (
-            <Badge variant="outline" className="ml-2 text-muted-foreground">
-              Inactive
-            </Badge>
-          )}
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "code",
-    header: "Discount Code",
-    cell: ({ row }) => row.original.code,
-  },
-  {
-    accessorKey: "type",
-    header: "Type",
-    cell: ({ row }) => {
-      const discount = row.original;
-      return (
-        <Badge variant={discount.type === 'Percentage' ? 'secondary' : 'outline'}>
-          {discount.type === 'Percentage' ? `${discount.value}%` : `$${discount.value}`}
-        </Badge>
-      );
-    },
-  },
-  {
-    accessorKey: "start_date",
-    header: "Start Date",
-    cell: ({ row }) => {
-      const startDate = row.original.start_date;
-      return startDate ? format(new Date(startDate), 'PP') : 'N/A';
-    },
-  },
-  {
-    accessorKey: "end_date",
-    header: "End Date",
-    cell: ({ row }) => {
-      const endDate = row.original.end_date;
-      return endDate ? format(new Date(endDate), 'PP') : 'Ongoing';
-    },
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const discount = row.original;
-      const [isEditOpen, setIsEditOpen] = useState(false);
+interface DiscountColumnsProps {
+  onEdit: (discount: Discount) => void;
+  onDelete: (discount: Discount) => void; // Added onDelete prop
+}
 
-      return (
-        <>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => setIsEditOpen(true)}
-                className="cursor-pointer"
-              >
-                <Pencil className="mr-2 h-4 w-4" /> Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  // TODO: Implement delete functionality
-                  console.log('Delete discount', discount);
-                }}
-                className="cursor-pointer text-destructive focus:text-destructive"
-              >
-                <Trash className="mr-2 h-4 w-4" /> Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <EditDiscountDialog 
-            isOpen={isEditOpen}
-            onClose={() => setIsEditOpen(false)}
-            discount={discount}
-            onDiscountUpdated={() => {
-              // Refetch discounts data
-              const event = new CustomEvent('discount-updated');
-              window.dispatchEvent(event);
-            }}
-          />
-        </>
-      );
+const DiscountColumns = ({ onEdit, onDelete }: DiscountColumnsProps): ColumnDef<Discount>[] => { // Added onDelete to destructuring
+  return [
+    {
+      accessorKey: "name",
+      header: "Discount",
+      cell: ({ row }) => {
+        const discount = row.original;
+        return (
+          <div className="font-medium">
+            {discount.name}
+            <div className="text-sm text-muted-foreground">
+              {discount.description}
+            </div>
+          </div>
+        );
+      },
     },
-  },
-];
+    {
+      accessorKey: "code",
+      header: "Code",
+      cell: ({ row }) => row.original.code,
+    },
+    {
+      accessorKey: "value",
+      header: "Value",
+      cell: ({ row }) => {
+        const discount = row.original;
+        return (
+          <div>
+            <div className="font-medium">
+              {discount.type === 'Percentage' ? `${discount.value}%` : `$${discount.value}`}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {discount.requirement ? `Min. purchase: $${discount.requirement}` : 'No minimum requirement'}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const discount = row.original;
+        const statusVariant = discount.status === 'Active' ? 'default' : 'outline'; // Assuming 'default' is green
+        return (
+          <Badge variant={statusVariant}>
+            {discount.status}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "validity",
+      header: "Validity",
+      cell: ({ row }) => {
+        const discount = row.original;
+        const startDate = discount.start_date ? new Date(discount.start_date) : null;
+        const endDate = discount.end_date ? new Date(discount.end_date) : null;
+        const now = new Date();
+
+        if (startDate && endDate) {
+          if (now >= startDate && now <= endDate) {
+            return format(endDate, 'PP');
+          } else if (now < startDate) {
+            return `Starts ${format(startDate, 'PP')}`;
+          } else {
+            return 'Expired';
+          }
+        } else if (startDate) {
+          if (now >= startDate) {
+            return 'Ongoing';
+          } else {
+            return `Starts ${format(startDate, 'PP')}`;
+          }
+        } else if (endDate) {
+          if (now <= endDate) {
+            return format(endDate, 'PP');
+          } else {
+            return 'Expired';
+          }
+        } else {
+          return 'No expiration';
+        }
+      },
+    },
+    {
+      accessorKey: "usage_count",
+      header: "Usage",
+      cell: ({ row }) => {
+        const discount = row.original;
+        return `${discount.usage_count ?? 0} uses`;
+      },
+    },
+    {
+      id: "actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const discount = row.original;
+
+        return (
+          <div className="flex items-center gap-2"> {/* Use a flex container for buttons */}
+            <Button variant="ghost" size="icon" onClick={() => onEdit(discount)}> {/* Edit button */}
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => onDelete(discount)}> {/* Delete button */}
+              <Trash className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+};
 
 export default DiscountColumns;

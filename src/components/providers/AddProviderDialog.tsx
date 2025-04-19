@@ -54,6 +54,7 @@ const defaultValues: FormValues = {
 interface AddProviderDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess: () => void; // Added onSuccess prop
 }
 
 export const AddProviderDialog = ({ isOpen, onClose }: AddProviderDialogProps) => {

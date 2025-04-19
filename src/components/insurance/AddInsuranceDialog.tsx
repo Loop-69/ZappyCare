@@ -1,147 +1,370 @@
-
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner"; // Using sonner for toasts
 
-export const AddInsuranceDialog = ({ open, onClose, onSuccess }) => {
-  const [formData, setFormData] = useState({
-    patient_id: "",
-    insurance_provider: "",
-    provider_type: "",
-    policy_number: "",
-    group_number: "",
-    verification_status: "Pending",
-    prior_authorization_required: false,
+import { BaseModal } from "@/components/modals/BaseModal";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox"; // Import Checkbox
+import { Textarea } from "@/components/ui/textarea"; // Import Textarea
+import { Patient } from "@/types"; // Assuming Patient type exists
+import { useQuery } from "@tanstack/react-query"; // Import useQuery
+import { InsuranceRecord } from "@/types/insurance-types"; // Import InsuranceRecord type
+
+// Define the form schema with Zod
+const formSchema = z.object({
+  patient_id: z.string().min(1, { message: "Patient is required" }),
+  patient_name_display: z.string().optional(), // Display only, not required for submission
+  verification_status: z.enum(["Pending", "Verified", "Rejected"]),
+  coverage_details: z.string().nullable(), // Changed to nullable
+  insurance_provider: z.string().min(1, { message: "Insurance Provider is required" }),
+  policy_number: z.string().nullable(), // Changed to nullable
+  group_number: z.string().nullable(), // Changed to nullable
+  prior_authorization_required: z.boolean().default(false).nullable(), // Changed to nullable
+  notes: z.string().nullable(), // Changed to nullable
+  provider_type: z.string().min(1, { message: "Provider Type is required" }), // Added provider_type
+  prior_authorization_status: z.string().nullable(), // Added prior_authorization_status
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+const defaultValues: FormValues = {
+  patient_id: "",
+  patient_name_display: "",
+  verification_status: "Pending",
+  coverage_details: null, // Changed to null
+  insurance_provider: "",
+  policy_number: null, // Changed to null
+  group_number: null, // Changed to null
+  prior_authorization_required: false,
+  notes: null, // Changed to null
+  provider_type: "", // Added
+  prior_authorization_status: null, // Added
+};
+
+interface AddInsuranceDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+// Define the type for the insert payload, omitting generated fields and relationships
+type InsuranceInsert = Omit<InsuranceRecord, 'id' | 'created_at' | 'updated_at' | 'patients'>;
+
+export const AddInsuranceDialog = ({ open, onClose, onSuccess }: AddInsuranceDialogProps) => {
+  const queryClient = useQueryClient();
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues,
   });
 
+  // Fetch patients for the dropdown
   const { data: patients = [] } = useQuery({
     queryKey: ['patients'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('patients')
         .select('id, first_name, last_name');
-      
+
       if (error) throw error;
-      return data;
+      return data as Patient[];
     }
   });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
+  // Update patient_name_display when patient_id changes
+  form.watch("patient_id"); // Watch for changes in patient_id
+
+  const selectedPatient = patients.find(p => p.id === form.getValues("patient_id"));
+  if (selectedPatient) {
+    const fullName = `${selectedPatient.first_name} ${selectedPatient.last_name}`;
+    if (form.getValues("patient_name_display") !== fullName) {
+       form.setValue("patient_name_display", fullName);
+    }
+  } else {
+     if (form.getValues("patient_name_display") !== "") {
+        form.setValue("patient_name_display", "");
+     }
+  }
+
+
+  // Set up the mutation for adding a new insurance record
+  const addInsuranceMutation = useMutation({
+    mutationFn: async (values: FormValues) => {
+      // Map form values to the insert payload type
+      const insertPayload: InsuranceInsert = {
+        patient_id: values.patient_id,
+        verification_status: values.verification_status,
+        coverage_details: values.coverage_details,
+        insurance_provider: values.insurance_provider,
+        policy_number: values.policy_number,
+        group_number: values.group_number,
+        prior_authorization_required: values.prior_authorization_required,
+        prior_authorization_status: values.prior_authorization_status, // Use value from form
+        notes: values.notes,
+        provider_type: values.provider_type, // Use value from form
+      };
+
       const { data, error } = await supabase
-        .from('insurance_records')
-        .insert(formData)
-        .select();
+        .from("insurance_records")
+        .insert([insertPayload] as any) // Cast to any as a workaround for type error // eslint-disable-line @typescript-eslint/no-explicit-any
+        .select("*")
+        .single();
 
       if (error) throw error;
-
-      toast({
-        title: "Insurance Record Added",
-        description: "A new insurance record has been successfully created.",
-      });
-
-      onSuccess();
+      return data; // Assuming the inserted data is returned
+    },
+    onSuccess: () => {
+      // Invalidate and refetch the insurance records query
+      queryClient.invalidateQueries({ queryKey: ["insurance_records"] }); // Assuming query key is 'insurance_records'
+      toast.success("Insurance record added successfully");
       onClose();
-    } catch (error) {
-      toast({
-        title: "Error Adding Insurance Record",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+      form.reset(defaultValues);
+    },
+    onError: (error: Error) => { // Explicitly type error
+      console.error("Error adding insurance record:", error);
+      toast.error(`Failed to add insurance record: ${error.message}`);
+    },
+  });
+
+  const handleSubmit = (values: FormValues) => {
+    addInsuranceMutation.mutate(values);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Add Insurance Record</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label>Patient</label>
-            <Select 
-              onValueChange={(value) => setFormData(prev => ({ ...prev, patient_id: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Patient" />
-              </SelectTrigger>
-              <SelectContent>
-                {patients.map(patient => (
-                  <SelectItem key={patient.id} value={patient.id}>
-                    {patient.first_name} {patient.last_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label>Insurance Provider</label>
-            <Input 
-              value={formData.insurance_provider}
-              onChange={(e) => setFormData(prev => ({ ...prev, insurance_provider: e.target.value }))}
-              placeholder="Enter Insurance Provider"
-              required
-            />
-          </div>
-          <div>
-            <label>Provider Type</label>
-            <Input 
-              value={formData.provider_type}
-              onChange={(e) => setFormData(prev => ({ ...prev, provider_type: e.target.value }))}
-              placeholder="Enter Provider Type"
-              required
-            />
-          </div>
-          <div>
-            <label>Policy Number</label>
-            <Input 
-              value={formData.policy_number}
-              onChange={(e) => setFormData(prev => ({ ...prev, policy_number: e.target.value }))}
-              placeholder="Enter Policy Number"
-            />
-          </div>
-          <div>
-            <label>Group Number</label>
-            <Input 
-              value={formData.group_number}
-              onChange={(e) => setFormData(prev => ({ ...prev, group_number: e.target.value }))}
-              placeholder="Enter Group Number"
-            />
-          </div>
-          <div>
-            <label>Verification Status</label>
-            <Select 
-              value={formData.verification_status}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, verification_status: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Pending">Pending</SelectItem>
-                <SelectItem value="Verified">Verified</SelectItem>
-                <SelectItem value="Rejected">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center space-x-2">
-            <input 
-              type="checkbox" 
-              checked={formData.prior_authorization_required}
-              onChange={(e) => setFormData(prev => ({ ...prev, prior_authorization_required: e.target.checked }))}
-            />
-            <label>Prior Authorization Required</label>
-          </div>
-          <Button type="submit">Add Insurance Record</Button>
+    <BaseModal
+      isOpen={open} // Use 'open' prop
+      onClose={onClose}
+      title="Add Insurance Record"
+      primaryAction={{
+        label: "Add Insurance Record",
+        onClick: form.handleSubmit(handleSubmit),
+        loading: addInsuranceMutation.isPending,
+        // Removed className as BaseModal primaryAction does not support it
+      }}
+      secondaryAction={{
+        label: "Cancel",
+        onClick: onClose,
+        // Removed variant as BaseModal secondaryAction does not support it
+      }}
+    >
+      <Form {...form}>
+        <form className="grid grid-cols-2 gap-4"> {/* Two-column layout */}
+          <FormField
+            control={form.control}
+            name="patient_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Patient *</FormLabel> {/* Added asterisk */}
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Search or Select Patient" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {patients.map((patient) => (
+                      <SelectItem key={patient.id} value={patient.id}>
+                        {patient.first_name} {patient.last_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="verification_status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Verification Status</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Pending">Pending</SelectItem>
+                    <SelectItem value="Verified">Verified</SelectItem>
+                    <SelectItem value="Rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="patient_name_display"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Patient Name (Display Only)</FormLabel>
+                <FormControl>
+                  <Input {...field} disabled /> {/* Disabled input */}
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="coverage_details"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Coverage Details</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Enter details about coverage, co-pays, deductibles, etc." {...field} value={field.value || ''} onChange={e => field.onChange(e.target.value || null)} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="provider_type"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Provider Type</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="prior_authorization_required"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 col-span-2"> {/* Span two columns */}
+                <FormControl>
+                  <Checkbox
+                    checked={field.value || false}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>
+                    Prior Authorization Required
+                  </FormLabel>
+                </div>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="insurance_provider"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Insurance Provider</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+           <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Notes</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Enter any additional notes about the verification process" {...field} value={field.value || ''} onChange={e => field.onChange(e.target.value || null)} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="policy_number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Policy Number</FormLabel>
+                <FormControl>
+                  <Input {...field} value={field.value || ''} onChange={e => field.onChange(e.target.value || null)} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="group_number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Group Number</FormLabel>
+                <FormControl>
+                  <Input {...field} value={field.value || ''} onChange={e => field.onChange(e.target.value || null)} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+           <FormField
+            control={form.control}
+            name="prior_authorization_status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Prior Authorization Status</FormLabel>
+                 <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Pending">Pending</SelectItem>
+                    <SelectItem value="Approved">Approved</SelectItem>
+                    <SelectItem value="Denied">Denied</SelectItem>
+                    <SelectItem value="N/A">N/A</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </form>
-      </DialogContent>
-    </Dialog>
+      </Form>
+    </BaseModal>
   );
 };
