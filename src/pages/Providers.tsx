@@ -96,6 +96,16 @@ export default function Providers() {
       }}
     >
       <div className="flex items-center gap-4 mb-4"> {/* Container for search and filter */}
+        <div className="relative w-72">
+          <Input
+            placeholder="Search providers..." // Changed placeholder to match image
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-8"
+          />
+          <Filter className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /> {/* Changed icon to Filter */}
+        </div>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="flex items-center gap-2">
@@ -116,7 +126,6 @@ export default function Providers() {
       <DataTable
         columns={ProviderColumns({ onEdit: handleEditProvider, onDelete: handleDeleteProvider })}
         data={filteredProviders} // Use filteredProviders
-        filterKey="name" // Keep filterKey for DataTable's internal filtering if needed, but our filtering is external now
         searchPlaceholder="Search providers..." // This will be overridden by our custom search input
       />
 
