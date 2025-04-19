@@ -27,21 +27,19 @@ import { Checkbox } from "@/components/ui/checkbox"; // Import Checkbox
 import { Textarea } from "@/components/ui/textarea"; // Import Textarea
 import { Patient } from "@/types"; // Assuming Patient type exists
 import { useQuery } from "@tanstack/react-query"; // Import useQuery
-import { InsuranceRecord } from "@/types/insurance-types"; // Import InsuranceRecord type
 
 // Define the form schema with Zod
 const formSchema = z.object({
   patient_id: z.string().min(1, { message: "Patient is required" }),
   patient_name_display: z.string().optional(), // Display only, not required for submission
   verification_status: z.enum(["Pending", "Verified", "Rejected"]),
-  coverage_details: z.string().nullable(), // Changed to nullable
+  coverage_details: z.string().optional(),
+  coverage_type: z.string().min(1, { message: "Coverage Type is required" }),
   insurance_provider: z.string().min(1, { message: "Insurance Provider is required" }),
-  policy_number: z.string().nullable(), // Changed to nullable
-  group_number: z.string().nullable(), // Changed to nullable
-  prior_authorization_required: z.boolean().default(false).nullable(), // Changed to nullable
-  notes: z.string().nullable(), // Changed to nullable
-  provider_type: z.string().min(1, { message: "Provider Type is required" }), // Added provider_type
-  prior_authorization_status: z.string().nullable(), // Added prior_authorization_status
+  policy_number: z.string().optional(),
+  group_number: z.string().optional(),
+  prior_authorization_required: z.boolean().default(false).optional(),
+  notes: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -50,26 +48,22 @@ const defaultValues: FormValues = {
   patient_id: "",
   patient_name_display: "",
   verification_status: "Pending",
-  coverage_details: null, // Changed to null
+  coverage_details: "",
+  coverage_type: "",
   insurance_provider: "",
-  policy_number: null, // Changed to null
-  group_number: null, // Changed to null
+  policy_number: "",
+  group_number: "",
   prior_authorization_required: false,
-  notes: null, // Changed to null
-  provider_type: "", // Added
-  prior_authorization_status: null, // Added
+  notes: "",
 };
 
 interface AddInsuranceDialogProps {
-  open: boolean;
+  isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-// Define the type for the insert payload, omitting generated fields and relationships
-type InsuranceInsert = Omit<InsuranceRecord, 'id' | 'created_at' | 'updated_at' | 'patients'>;
-
-export const AddInsuranceDialog = ({ open, onClose, onSuccess }: AddInsuranceDialogProps) => {
+export const AddInsuranceDialog = ({ isOpen, onClose, onSuccess }: AddInsuranceDialogProps) => {
   const queryClient = useQueryClient();
 
   const form = useForm<FormValues>({
@@ -109,23 +103,19 @@ export const AddInsuranceDialog = ({ open, onClose, onSuccess }: AddInsuranceDia
   // Set up the mutation for adding a new insurance record
   const addInsuranceMutation = useMutation({
     mutationFn: async (values: FormValues) => {
-      // Map form values to the insert payload type
-      const insertPayload: InsuranceInsert = {
-        patient_id: values.patient_id,
-        verification_status: values.verification_status,
-        coverage_details: values.coverage_details,
-        insurance_provider: values.insurance_provider,
-        policy_number: values.policy_number,
-        group_number: values.group_number,
-        prior_authorization_required: values.prior_authorization_required,
-        prior_authorization_status: values.prior_authorization_status, // Use value from form
-        notes: values.notes,
-        provider_type: values.provider_type, // Use value from form
-      };
-
       const { data, error } = await supabase
         .from("insurance_records")
-        .insert([insertPayload] as any) // Cast to any as a workaround for type error // eslint-disable-line @typescript-eslint/no-explicit-any
+        .insert({
+          patient_id: values.patient_id,
+          verification_status: values.verification_status,
+          coverage_details: values.coverage_details,
+          coverage_type: values.coverage_type,
+          insurance_provider: values.insurance_provider,
+          policy_number: values.policy_number,
+          group_number: values.group_number,
+          prior_authorization_required: values.prior_authorization_required,
+          notes: values.notes,
+        })
         .select("*")
         .single();
 
@@ -139,7 +129,7 @@ export const AddInsuranceDialog = ({ open, onClose, onSuccess }: AddInsuranceDia
       onClose();
       form.reset(defaultValues);
     },
-    onError: (error: Error) => { // Explicitly type error
+    onError: (error: any) => {
       console.error("Error adding insurance record:", error);
       toast.error(`Failed to add insurance record: ${error.message}`);
     },
@@ -151,19 +141,19 @@ export const AddInsuranceDialog = ({ open, onClose, onSuccess }: AddInsuranceDia
 
   return (
     <BaseModal
-      isOpen={open} // Use 'open' prop
+      isOpen={isOpen}
       onClose={onClose}
       title="Add Insurance Record"
       primaryAction={{
         label: "Add Insurance Record",
         onClick: form.handleSubmit(handleSubmit),
         loading: addInsuranceMutation.isPending,
-        // Removed className as BaseModal primaryAction does not support it
+        className: "bg-purple-600 hover:bg-purple-700", // Purple button
       }}
       secondaryAction={{
         label: "Cancel",
         onClick: onClose,
-        // Removed variant as BaseModal secondaryAction does not support it
+        variant: "outline", // Outline button
       }}
     >
       <Form {...form}>
@@ -243,7 +233,7 @@ export const AddInsuranceDialog = ({ open, onClose, onSuccess }: AddInsuranceDia
               <FormItem>
                 <FormLabel>Coverage Details</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="Enter details about coverage, co-pays, deductibles, etc." {...field} value={field.value || ''} onChange={e => field.onChange(e.target.value || null)} />
+                  <Textarea placeholder="Enter details about coverage, co-pays, deductibles, etc." {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -252,13 +242,26 @@ export const AddInsuranceDialog = ({ open, onClose, onSuccess }: AddInsuranceDia
 
           <FormField
             control={form.control}
-            name="provider_type"
+            name="coverage_type"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Provider Type</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
+                <FormLabel>Coverage Type</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Coverage Type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                     {/* Add relevant coverage type options here */}
+                    <SelectItem value="Medical Insurance">Medical Insurance</SelectItem>
+                    <SelectItem value="Dental Insurance">Dental Insurance</SelectItem>
+                    <SelectItem value="Vision Insurance">Vision Insurance</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -271,7 +274,7 @@ export const AddInsuranceDialog = ({ open, onClose, onSuccess }: AddInsuranceDia
               <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 col-span-2"> {/* Span two columns */}
                 <FormControl>
                   <Checkbox
-                    checked={field.value || false}
+                    checked={field.value}
                     onCheckedChange={field.onChange}
                   />
                 </FormControl>
@@ -305,7 +308,7 @@ export const AddInsuranceDialog = ({ open, onClose, onSuccess }: AddInsuranceDia
               <FormItem>
                 <FormLabel>Notes</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="Enter any additional notes about the verification process" {...field} value={field.value || ''} onChange={e => field.onChange(e.target.value || null)} />
+                  <Textarea placeholder="Enter any additional notes about the verification process" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -319,7 +322,7 @@ export const AddInsuranceDialog = ({ open, onClose, onSuccess }: AddInsuranceDia
               <FormItem>
                 <FormLabel>Policy Number</FormLabel>
                 <FormControl>
-                  <Input {...field} value={field.value || ''} onChange={e => field.onChange(e.target.value || null)} />
+                  <Input {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -333,32 +336,8 @@ export const AddInsuranceDialog = ({ open, onClose, onSuccess }: AddInsuranceDia
               <FormItem>
                 <FormLabel>Group Number</FormLabel>
                 <FormControl>
-                  <Input {...field} value={field.value || ''} onChange={e => field.onChange(e.target.value || null)} />
+                  <Input {...field} />
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-           <FormField
-            control={form.control}
-            name="prior_authorization_status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Prior Authorization Status</FormLabel>
-                 <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="Approved">Approved</SelectItem>
-                    <SelectItem value="Denied">Denied</SelectItem>
-                    <SelectItem value="N/A">N/A</SelectItem>
-                  </SelectContent>
-                </Select>
                 <FormMessage />
               </FormItem>
             )}
