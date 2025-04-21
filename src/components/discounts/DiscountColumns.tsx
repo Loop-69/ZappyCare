@@ -3,7 +3,9 @@ import { Discount } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash } from "lucide-react"; // Removed MoreHorizontal and DropdownMenu imports
+import { Pencil, Trash } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DiscountActions } from "./DiscountActions";
 
 interface DiscountColumnsProps {
   onEdit: (discount: Discount) => void;
@@ -132,7 +134,14 @@ const DiscountColumns = ({ onEdit, onDelete }: DiscountColumnsProps): ColumnDef<
     {
       id: "actions",
       header: "Actions",
-      cell: ({ row }) => <DiscountActions discount={row.original} iconOnly />,
+      cell: ({ row }) => (
+        <DiscountActions 
+          discount={row.original} 
+          iconOnly 
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+      ),
     },
   ];
 };
