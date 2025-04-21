@@ -1,4 +1,3 @@
-
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -39,7 +38,7 @@ export const TagColumns: ColumnDef<Tag>[] = [
   {
     id: "actions",
     header: "Actions",
-    cell: ({ row }) => <TagActions record={row.original} />,
+    cell: ({ row }) => <TagActions record={row.original} iconOnly />,
   },
 ];
 

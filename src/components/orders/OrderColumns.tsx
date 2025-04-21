@@ -1,4 +1,3 @@
-
 import { ColumnDef } from "@tanstack/react-table";
 import { Order } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -20,9 +19,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface OrderActionsProps {
   order: Order;
+  iconOnly?: boolean;
 }
 
-function OrderActions({ order }: OrderActionsProps) {
+function OrderActions({ order, iconOnly }: OrderActionsProps) {
   const navigate = useNavigate();
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
@@ -238,11 +238,8 @@ export const pendingOrderColumns: ColumnDef<Order>[] = [
   },
   {
     id: "actions",
-    header: "ACTIONS",
-    cell: ({ row }) => {
-      const order = row.original;
-      return <OrderActions order={order} />;
-    },
+    header: "Actions",
+    cell: ({ row }) => <OrderActions order={row.original} iconOnly />,
   },
 ];
 
@@ -299,11 +296,8 @@ export const processingOrderColumns: ColumnDef<Order>[] = [
   },
   {
     id: "actions",
-    header: "ACTIONS",
-    cell: ({ row }) => {
-      const order = row.original;
-      return <OrderActions order={order} />;
-    },
+    header: "Actions",
+    cell: ({ row }) => <OrderActions order={row.original} iconOnly />,
   },
 ];
 
@@ -379,5 +373,10 @@ export const shippedOrderColumns: ColumnDef<Order>[] = [
         {row.getValue("pharmacy_id")}
       </div>
     ),
+  },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => <OrderActions order={row.original} iconOnly />,
   },
 ];

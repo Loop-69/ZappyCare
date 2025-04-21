@@ -1,4 +1,3 @@
-
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -63,6 +62,6 @@ export const ServiceColumns: ColumnDef<ServiceWithRelations>[] = [
   {
     id: "actions",
     header: "Actions",
-    cell: ({ row }) => <ServiceActions record={row.original} />,
+    cell: ({ row }) => <ServiceActions record={row.original} iconOnly />,
   },
 ];

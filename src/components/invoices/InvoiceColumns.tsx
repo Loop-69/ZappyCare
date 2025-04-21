@@ -1,4 +1,3 @@
-
 import { ColumnDef } from "@tanstack/react-table";
 import { Invoice } from "@/types";
 import { format } from "date-fns";
@@ -182,5 +181,10 @@ export const InvoiceColumns: ColumnDef<Invoice>[] = [
     cell: ({ row }) => (
       <div className="text-right">${(row.original.refunded_amount || 0).toFixed(2)}</div>
     ),
+  },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => <InvoiceActions invoice={row.original} iconOnly />,
   },
 ];

@@ -110,16 +110,18 @@ export const getPatientColumns = (navigate: NavigateFunction, onEditClick: (pati
       header: "ACTIONS",
       cell: ({ row }) => {
         const patient = row.original;
-
         return (
-          <Button
-            variant="ghost"
-            className="h-8 w-8 p-0"
-            onClick={() => onEditClick(patient)}
-          >
-            <span className="sr-only">Edit patient</span>
-            <Edit className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="icon" onClick={() => navigate(`/patients/${patient.id}`)} title="View">
+              <Eye className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => onEditClick(patient)} title="Edit">
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => {/* TODO: implement delete */}} title="Delete">
+              <Trash className="h-4 w-4 text-red-500" />
+            </Button>
+          </div>
         );
       },
     },

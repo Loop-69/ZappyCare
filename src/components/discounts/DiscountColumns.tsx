@@ -106,21 +106,8 @@ const DiscountColumns = ({ onEdit, onDelete }: DiscountColumnsProps): ColumnDef<
     },
     {
       id: "actions",
-      enableHiding: false,
-      cell: ({ row }) => {
-        const discount = row.original;
-
-        return (
-          <div className="flex items-center gap-2"> {/* Use a flex container for buttons */}
-            <Button variant="ghost" size="icon" onClick={() => onEdit(discount)}> {/* Edit button */}
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => onDelete(discount)}> {/* Delete button */}
-              <Trash className="h-4 w-4 text-destructive" />
-            </Button>
-          </div>
-        );
-      },
+      header: "Actions",
+      cell: ({ row }) => <DiscountActions discount={row.original} iconOnly />,
     },
   ];
 };

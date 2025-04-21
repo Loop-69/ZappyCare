@@ -1,7 +1,6 @@
-
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { MoreHorizontal, ExternalLink, Pencil, Trash2 } from "lucide-react";
+import { MoreHorizontal, ExternalLink, Pencil, Trash2, Eye, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -79,31 +78,17 @@ export const consultationColumns: ColumnDef<any>[] = [
   {
     id: "actions",
     cell: ({ row }) => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">Open menu</span>
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem className="cursor-pointer flex gap-2">
-            <ExternalLink className="h-4 w-4" />
-            <span>View Details</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer flex gap-2">
-            <Pencil className="h-4 w-4" />
-            <span>Edit</span>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem 
-            className="cursor-pointer flex gap-2 text-red-600 focus:text-red-600"
-          >
-            <Trash2 className="h-4 w-4" />
-            <span>Delete</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="flex gap-2">
+        <Button variant="ghost" size="icon" onClick={() => {/* TODO: implement view */}} title="View">
+          <Eye className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => {/* TODO: implement edit */}} title="Edit">
+          <Edit className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => {/* TODO: implement delete */}} title="Delete">
+          <Trash2 className="h-4 w-4 text-red-500" />
+        </Button>
+      </div>
     ),
   },
 ];

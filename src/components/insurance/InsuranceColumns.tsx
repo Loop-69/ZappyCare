@@ -1,4 +1,3 @@
-
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -94,6 +93,6 @@ export const InsuranceColumns: ColumnDef<any>[] = [
   {
     id: "actions",
     header: "Actions",
-    cell: ({ row }) => <InsuranceActions record={row.original} />,
+    cell: ({ row }) => <InsuranceActions record={row.original} iconOnly />,
   },
 ];
