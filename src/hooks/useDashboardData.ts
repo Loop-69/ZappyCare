@@ -32,18 +32,40 @@ export const useDashboardData = () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
-      const { data, error } = await supabase
+      // First fetch sessions
+      const { data: sessions, error } = await supabase
         .from("sessions")
         .select(`
-          *,
-          patients:patient_id (first_name, last_name)
+          id,
+          scheduled_date,
+          session_type,
+          status,
+          duration_minutes,
+          patient_id,
+          created_at,
+          updated_at,
+          provider_id,
+          notes
         `)
         .gte("scheduled_date", today.toISOString())
         .order("scheduled_date", { ascending: true })
         .limit(5);
       
       if (error) throw error;
-      return data || [];
+      if (!sessions) return [];
+      
+      // Then fetch related patients
+      const patientIds = sessions.map(s => s.patient_id).filter(Boolean);
+      const { data: patients } = await supabase
+        .from("patients")
+        .select("id, first_name, last_name")
+        .in("id", patientIds);
+      
+      // Combine the data
+      return sessions.map(session => ({
+        ...session,
+        patient: patients?.find(p => p.id === session.patient_id)
+      }));
     },
   });
 
@@ -57,25 +79,38 @@ export const useDashboardData = () => {
       tomorrow.setDate(tomorrow.getDate() + 1);
       
       // First, fetch sessions for today
+      // First fetch sessions
       const { data: sessionsData, error: sessionsError } = await supabase
         .from("sessions")
-        .select("*")
+        .select(`
+          id,
+          scheduled_date,
+          session_type,
+          status,
+          duration_minutes,
+          patient_id,
+          created_at,
+          updated_at,
+          provider_id,
+          notes
+        `)
         .gte("scheduled_date", today.toISOString())
         .lt("scheduled_date", tomorrow.toISOString())
         .order("scheduled_date", { ascending: true });
       
       if (sessionsError) throw sessionsError;
+      if (!sessionsData) return [];
       
-      // Process each session and fetch patient data separately
-      const processedSessions = await Promise.all((sessionsData || []).map(async (session) => {
-        // Fetch patient data for this session
-        const { data: patientData } = await supabase
-          .from("patients")
-          .select("first_name, last_name")
-          .eq("id", session.patient_id)
-          .single();
-        
-        // Ensure session_type is valid
+      // Then fetch related patients
+      const patientIds = sessionsData.map(s => s.patient_id).filter(Boolean);
+      const { data: patients } = await supabase
+        .from("patients")
+        .select("id, first_name, last_name")
+        .in("id", patientIds);
+      
+      // Process and validate the sessions
+      return sessionsData.map((session) => {
+        // Validate session type
         const sessionType = isValidSessionType(session.session_type) 
           ? session.session_type 
           : "video";
@@ -85,28 +120,14 @@ export const useDashboardData = () => {
           ? session.status
           : "scheduled";
         
-        const processedSession: Session = {
-          id: session.id,
-          scheduled_date: session.scheduled_date,
+        return {
+          ...session,
           session_type: sessionType,
           status: sessionStatus,
           duration_minutes: session.duration_minutes || 60,
-          patient_id: session.patient_id,
-          created_at: session.created_at,
-          updated_at: session.updated_at,
-          provider_id: session.provider_id,
-          notes: session.notes,
-          // Include patient data if available
-          patient: patientData ? {
-            first_name: patientData.first_name,
-            last_name: patientData.last_name
-          } : undefined
-        };
-        
-        return processedSession;
-      }));
-      
-      return processedSessions;
+          patient: patients?.find(p => p.id === session.patient_id)
+        } as Session;
+      });
     },
   });
 
@@ -129,48 +150,42 @@ export const useDashboardData = () => {
   const { data: newConsultations, isLoading: isLoadingConsultations } = useQuery({
     queryKey: ["new-consultations"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First fetch consultations
+      const { data: consultations, error } = await supabase
         .from("consultations")
         .select(`
-          *,
-          patients (first_name, last_name, email)
+          id,
+          created_at,
+          status,
+          service,
+          email,
+          form_completed,
+          date_submitted,
+          patient_id
         `)
-        .eq("status", "Pending")
+        .eq("status", "pending")
         .order("created_at", { ascending: false })
         .limit(5);
       
       if (error) throw error;
+      if (!consultations) return [];
       
-      // Process and validate the data to match the Consultation type
-      const processedConsultations = (data || []).map(consultation => {
-        // Ensure patients field has the expected shape
-        const processedConsultation: Consultation = {
-          id: consultation.id,
-          created_at: consultation.created_at,
-          status: consultation.status,
-          service: consultation.service || "",
-          email: consultation.email || "",
-          form_completed: consultation.form_completed || false,
-          date_submitted: consultation.date_submitted || consultation.created_at,
-          patient_id: consultation.patient_id,
-          // Handle potential error in the patients field by providing default values and correct type
-          patients: consultation.patients && typeof consultation.patients === 'object' 
-            ? {
-                first_name: (consultation.patients as { first_name: string | null }).first_name || 'Unknown',
-                last_name: (consultation.patients as { last_name: string | null }).last_name || 'Patient',
-                email: (consultation.patients as { email: string | null }).email || 'unknown@example.com'
-              }
-            : { 
-                first_name: 'Unknown', 
-                last_name: 'Patient',
-                email: 'unknown@example.com'
-              }
-        };
-        
-        return processedConsultation;
-      });
+      // Then fetch related patients
+      const patientIds = consultations.map(c => c.patient_id).filter(Boolean);
+      const { data: patients } = await supabase
+        .from("patients")
+        .select("id, first_name, last_name, email")
+        .in("id", patientIds);
       
-      return processedConsultations;
+      // Combine the data
+      return consultations.map(consultation => ({
+        ...consultation,
+        patients: patients?.find(p => p.id === consultation.patient_id) || {
+          first_name: 'Unknown',
+          last_name: 'Patient',
+          email: 'unknown@example.com'
+        }
+      }));
     },
   });
 

@@ -133,9 +133,14 @@ export const AddProviderDialog = ({ isOpen, onClose }: AddProviderDialogProps) =
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name</FormLabel>
+                <FormLabel htmlFor="provider-name">Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Dr. Jane Smith" {...field} />
+                  <Input 
+                    id="provider-name"
+                    placeholder="Dr. Jane Smith" 
+                    aria-describedby="provider-name-error"
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -147,9 +152,14 @@ export const AddProviderDialog = ({ isOpen, onClose }: AddProviderDialogProps) =
             name="specialty"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Specialty</FormLabel>
+                <FormLabel htmlFor="provider-specialty">Specialty</FormLabel>
                 <FormControl>
-                  <Input placeholder="Cardiology" {...field} />
+                  <Input 
+                    id="provider-specialty"
+                    placeholder="Cardiology" 
+                    aria-describedby="provider-specialty-error"
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -161,9 +171,14 @@ export const AddProviderDialog = ({ isOpen, onClose }: AddProviderDialogProps) =
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel htmlFor="provider-email">Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="doctor@example.com" {...field} />
+                  <Input 
+                    id="provider-email"
+                    placeholder="doctor@example.com" 
+                    aria-describedby="provider-email-error"
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -175,9 +190,14 @@ export const AddProviderDialog = ({ isOpen, onClose }: AddProviderDialogProps) =
             name="phone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Phone</FormLabel>
+                <FormLabel htmlFor="provider-phone">Phone</FormLabel>
                 <FormControl>
-                  <Input placeholder="(555) 123-4567" {...field} />
+                  <Input 
+                    id="provider-phone"
+                    placeholder="(555) 123-4567" 
+                    aria-describedby="provider-phone-error"
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -189,13 +209,13 @@ export const AddProviderDialog = ({ isOpen, onClose }: AddProviderDialogProps) =
             name="status"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Status</FormLabel>
+                <FormLabel htmlFor="provider-status">Status</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger id="provider-status" aria-describedby="provider-status-error">
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                   </FormControl>
@@ -204,7 +224,7 @@ export const AddProviderDialog = ({ isOpen, onClose }: AddProviderDialogProps) =
                     <SelectItem value="Inactive">Inactive</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormMessage />
+                <FormMessage id="provider-status-error" />
               </FormItem>
             )}
           />
@@ -214,15 +234,17 @@ export const AddProviderDialog = ({ isOpen, onClose }: AddProviderDialogProps) =
             name="states_authorized"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>States Authorized</FormLabel>
+                <FormLabel id="states-authorized-label">States Authorized</FormLabel>
                 <FormControl>
                   <CheckboxMultiSelect
                     options={STATES}
                     selectedValues={field.value}
                     onChange={field.onChange}
+                    aria-labelledby="states-authorized-label"
+                    aria-describedby="states-authorized-error"
                   />
                 </FormControl>
-                <FormMessage />
+                <FormMessage id="states-authorized-error" />
               </FormItem>
             )}
           />

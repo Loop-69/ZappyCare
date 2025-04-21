@@ -11,7 +11,7 @@ interface PatientSessionsTabProps {
   patientId: string;
 }
 
-export function PatientSessionsTab({ patientId }: PatientSessionsTabProps) {
+export default function PatientSessionsTab({ patientId }: PatientSessionsTabProps) {
   const [isAddSessionOpen, setIsAddSessionOpen] = useState(false);
 
   const { data: sessions, isLoading, refetch } = useQuery({

@@ -1,9 +1,10 @@
 
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export function usePatientRecords(patientId: string) {
-  // Fetch sessions (appointments)
+  // Fetch sessions (appointments) - limited to 10 most recent
   const { data: sessions, isLoading: isLoadingSessions } = useQuery({
     queryKey: ["patient-sessions-dashboard", patientId],
     queryFn: async () => {
@@ -11,67 +12,51 @@ export function usePatientRecords(patientId: string) {
         .from("sessions")
         .select("*")
         .eq("patient_id", patientId)
-        .order("scheduled_date", { ascending: false });
+        .order("scheduled_date", { ascending: false })
+        .limit(10);
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching sessions:", error);
+        return [];
+      }
       return data || [];
     },
   });
 
-  // Fetch forms
+  // Fetch forms - limited to 5 most recent
   const { data: forms, isLoading: isLoadingForms } = useQuery({
     queryKey: ["patient-forms", patientId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("form_submissions")
-        .select("*, form_templates(*)")
-        .eq("patient_id", patientId);
+        .select("id, created_at, status, form_templates(title)")
+        .eq("patient_id", patientId)
+        .order("created_at", { ascending: false })
+        .limit(5);
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching forms:", error);
+        return [];
+      }
       return data || [];
     },
   });
 
-  // Fetch medications
-  const { data: medications, isLoading: isLoadingMedications } = useQuery({
-    queryKey: ["patient-medications", patientId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*, order_items(*)")
-        .eq("patient_id", patientId);
-        
-      if (error) throw error;
-      
-      // Extract medication items from orders
-      const medicationItems: any[] = [];
-      data?.forEach(order => {
-        if (order.order_items && Array.isArray(order.order_items)) {
-          order.order_items.forEach((item: any) => {
-            medicationItems.push({
-              ...item,
-              order_date: order.order_date,
-              status: order.status
-            });
-          });
-        }
-      });
-      
-      return medicationItems;
-    },
-  });
-
-  // Fetch notes
+  // Fetch notes - limited to 5 most recent
   const { data: notes, isLoading: isLoadingNotes } = useQuery({
     queryKey: ["patient-notes-dashboard", patientId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("patient_notes")
-        .select("*")
+        .select("id, created_at, content")
         .eq("patient_id", patientId)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(5);
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching notes:", error);
+        return [];
+      }
       return data || [];
     },
   });
@@ -84,12 +69,12 @@ export function usePatientRecords(patientId: string) {
     { id: "4", name: "Thyroid Function", date: "2025-02-20", status: "completed" },
   ];
 
-  const isLoading = isLoadingSessions || isLoadingForms || isLoadingMedications || isLoadingNotes;
+  const isLoading = isLoadingSessions || isLoadingForms || isLoadingNotes;
 
   return {
     sessions,
     forms,
-    medications,
+    medications: [], // Return empty array for medications
     notes,
     labResults,
     isLoading

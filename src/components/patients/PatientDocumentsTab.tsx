@@ -9,7 +9,7 @@ interface PatientDocumentsTabProps {
   patientId: string;
 }
 
-export function PatientDocumentsTab({ patientId }: PatientDocumentsTabProps) {
+export default function PatientDocumentsTab({ patientId }: PatientDocumentsTabProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { 
     documents, 

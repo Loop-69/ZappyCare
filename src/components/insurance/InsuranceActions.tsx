@@ -10,8 +10,8 @@ import { MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
-import { EditInsuranceDialog } from "./EditInsuranceDialog";
 import { useQueryClient } from "@tanstack/react-query";
+import { InsuranceRecordDialog } from "./InsuranceRecordDialog";
 
 export const InsuranceActions = ({ record }) => {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -65,8 +65,8 @@ export const InsuranceActions = ({ record }) => {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <EditInsuranceDialog
-        open={isEditDialogOpen}
+      <InsuranceRecordDialog
+        isOpen={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}
         onSuccess={() => {
           setIsEditDialogOpen(false);

@@ -118,7 +118,9 @@ const FormControl = React.forwardRef<
       }
       aria-invalid={!!error}
       {...props}
-    />
+    >
+      {React.Children.map(props.children, child => child) || null}
+    </Slot>
   )
 })
 FormControl.displayName = "FormControl"
