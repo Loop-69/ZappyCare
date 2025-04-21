@@ -1,10 +1,10 @@
-
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { Calendar, Clock, Video, Phone, User } from "lucide-react";
 import { Session } from "@/types/session-types";
 import { Badge } from "@/components/ui/badge";
 import { SessionActions } from "./SessionActions";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const getStatusColor = (status: Session["status"]) => {
   switch (status) {
@@ -35,6 +35,31 @@ const getSessionTypeIcon = (type: Session["session_type"]) => {
 };
 
 export const SessionColumns: ColumnDef<Session>[] = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected()
+            ? true
+            : table.getIsSomePageRowsSelected()
+            ? "indeterminate"
+            : false
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
   {
     accessorKey: "patient",
     header: "Patient",

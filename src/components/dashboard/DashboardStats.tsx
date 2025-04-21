@@ -62,7 +62,17 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
       {stats.map((stat, index) => (
-        <StatsCard key={index} {...stat} />
+        <StatsCard 
+          key={index} 
+          {...stat} 
+          href={
+            stat.type === 'patients' ? '/patients' :
+            stat.type === 'sessions' ? '/sessions' :
+            stat.type === 'orders' ? '/orders' :
+            stat.type === 'consultations' ? '/consultations' :
+            undefined // No link for other types
+          }
+        />
       ))}
     </div>
   );

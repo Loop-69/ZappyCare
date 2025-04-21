@@ -52,16 +52,21 @@ export const BaseModal = ({
 }: BaseModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className={`${sizes[size]} p-0 gap-0`}>
+      <DialogContent 
+        className={`${sizes[size]} p-0 gap-0`}
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
         <DialogHeader className="p-6 pb-2">
           <div className="flex items-center justify-between">
-            <DialogTitle>{title}</DialogTitle>
+            <DialogTitle id="modal-title">{title}</DialogTitle>
             {showCloseButton && (
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
                 onClick={onClose}
+                aria-label="Close modal"
               >
                 <X className="h-4 w-4" />
               </Button>

@@ -22,7 +22,7 @@ interface FormSubmission {
   };
 }
 
-export function PatientFormsTab({ patientId }: PatientFormsTabProps) {
+export default function PatientFormsTab({ patientId }: PatientFormsTabProps) {
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   
   const { data: forms, isLoading, refetch } = useQuery({

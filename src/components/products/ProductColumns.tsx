@@ -1,4 +1,3 @@
-
 import { ColumnDef } from "@tanstack/react-table";
 import { Product } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -13,8 +12,34 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ProductStatus } from "@/components/products/ProductStatus";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const ProductColumns: ColumnDef<Product>[] = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected()
+            ? true
+            : table.getIsSomePageRowsSelected()
+            ? "indeterminate"
+            : false
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
   {
     accessorKey: "name",
     header: "Name",
@@ -103,37 +128,16 @@ const ProductColumns: ColumnDef<Product>[] = [
   },
   {
     id: "actions",
-    cell: ({ row }) => {
-      const product = row.original;
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem 
-              className="cursor-pointer flex items-center gap-2"
-              onClick={() => console.log("Edit", product.id)}
-            >
-              <Edit className="h-4 w-4" />
-              <span>Edit</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              className="cursor-pointer text-red-600 flex items-center gap-2"
-              onClick={() => console.log("Delete", product.id)}
-            >
-              <Trash2 className="h-4 w-4" />
-              <span>Delete</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
+    cell: ({ row }) => (
+      <div className="flex gap-2">
+        <Button variant="ghost" size="icon" onClick={() => console.log('Edit', row.original.id)} title="Edit">
+          <Edit className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => console.log('Delete', row.original.id)} title="Delete">
+          <Trash2 className="h-4 w-4 text-red-500" />
+        </Button>
+      </div>
+    ),
   },
 ];
 

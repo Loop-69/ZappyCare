@@ -11,7 +11,7 @@ interface PatientBillingTabProps {
   patientId: string;
 }
 
-export function PatientBillingTab({ patientId }: PatientBillingTabProps) {
+export default function PatientBillingTab({ patientId }: PatientBillingTabProps) {
   const { data: invoices, isLoading } = useQuery({
     queryKey: ["patient-invoices", patientId],
     queryFn: async () => {

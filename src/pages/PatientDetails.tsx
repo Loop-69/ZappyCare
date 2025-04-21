@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -11,14 +11,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PatientInfo } from "@/components/patients/PatientInfo";
 import { PatientMedicalInfo } from "@/components/patients/PatientMedicalInfo";
 import { PatientSubscription } from "@/components/patients/PatientSubscription";
-import { PatientSessionsTab } from "@/components/patients/PatientSessionsTab";
-import { PatientOrdersTab } from "@/components/patients/PatientOrdersTab";
-import { PatientNotesTab } from "@/components/patients/PatientNotesTab";
-import { PatientDocumentsTab } from "@/components/patients/PatientDocumentsTab";
-import { PatientFormsTab } from "@/components/patients/PatientFormsTab";
-import { PatientBillingTab } from "@/components/patients/PatientBillingTab";
 import { EditPatientDialog } from "@/components/patients/EditPatientDialog";
 import { Patient } from "@/types";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Lazy load tab components
+const PatientSessionsTab = lazy(() => import("@/components/patients/PatientSessionsTab").then(m => ({ default: m.default })));
+const PatientOrdersTab = lazy(() => import("@/components/patients/PatientOrdersTab").then(m => ({ default: m.default })));
+const PatientNotesTab = lazy(() => import("@/components/patients/PatientNotesTab").then(m => ({ default: m.default })));
+const PatientDocumentsTab = lazy(() => import("@/components/patients/PatientDocumentsTab").then(m => ({ default: m.default })));
+const PatientFormsTab = lazy(() => import("@/components/patients/PatientFormsTab").then(m => ({ default: m.default })));
+const PatientBillingTab = lazy(() => import("@/components/patients/PatientBillingTab").then(m => ({ default: m.default })));
 
 export default function PatientDetails() {
   const { id } = useParams();
@@ -41,7 +44,7 @@ export default function PatientDetails() {
       if (error) throw error;
       
       // Initialize addressData with default values
-      let addressData = {
+      const addressData = {
         city: '',
         state: '',
         zip_code: ''
@@ -52,14 +55,14 @@ export default function PatientDetails() {
         try {
           if (typeof data.address === 'string') {
             // Parse the string to an object
-            const parsedAddress = JSON.parse(data.address);
+            const parsedAddress = JSON.parse(data.address) as { city?: string; state?: string; zip_code?: string };
             // Extract the relevant fields if they exist
             if (parsedAddress.city) addressData.city = parsedAddress.city;
             if (parsedAddress.state) addressData.state = parsedAddress.state;
             if (parsedAddress.zip_code) addressData.zip_code = parsedAddress.zip_code;
           } else if (typeof data.address === 'object') {
             // Extract the relevant fields if they exist from the object
-            const addressObj = data.address as Record<string, any>;
+            const addressObj = data.address as { city?: string; state?: string; zip_code?: string };
             if (addressObj.city) addressData.city = addressObj.city;
             if (addressObj.state) addressData.state = addressObj.state;
             if (addressObj.zip_code) addressData.zip_code = addressObj.zip_code;
@@ -163,27 +166,39 @@ export default function PatientDetails() {
           </TabsContent>
           
           <TabsContent value="sessions">
-            <PatientSessionsTab patientId={patientData.id} />
+            <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+              <PatientSessionsTab patientId={patientData.id} />
+            </Suspense>
           </TabsContent>
           
           <TabsContent value="orders">
-            <PatientOrdersTab patientId={patientData.id} />
+            <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+              <PatientOrdersTab patientId={patientData.id} />
+            </Suspense>
           </TabsContent>
           
           <TabsContent value="notes">
-            <PatientNotesTab patientId={patientData.id} />
+            <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+              <PatientNotesTab patientId={patientData.id} />
+            </Suspense>
           </TabsContent>
           
           <TabsContent value="documents">
-            <PatientDocumentsTab patientId={patientData.id} />
+            <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+              <PatientDocumentsTab patientId={patientData.id} />
+            </Suspense>
           </TabsContent>
           
           <TabsContent value="forms">
-            <PatientFormsTab patientId={patientData.id} />
+            <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+              <PatientFormsTab patientId={patientData.id} />
+            </Suspense>
           </TabsContent>
           
           <TabsContent value="billing">
-            <PatientBillingTab patientId={patientData.id} />
+            <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+              <PatientBillingTab patientId={patientData.id} />
+            </Suspense>
           </TabsContent>
         </Tabs>
       </div>

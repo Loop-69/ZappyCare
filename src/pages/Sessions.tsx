@@ -1,14 +1,16 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarClock, Plus } from "lucide-react";
+import { Plus, Search, ChevronDown } from "lucide-react";
 import PageLayout from "@/components/layout/PageLayout";
 import { DataTable } from "@/components/ui/data-table";
 import { SessionColumns } from "@/components/sessions/SessionColumns";
 import AddSessionDialog from "@/components/sessions/AddSessionDialog";
-import { SessionStatus } from "@/components/sessions/SessionStatus";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@/types/session-types";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 function isValidSessionType(sessionType: string): sessionType is Session["session_type"] {
   return ["video", "phone", "in-person"].includes(sessionType);
@@ -20,7 +22,8 @@ function isValidSessionStatus(status: string): status is Session["status"] {
 
 const Sessions = () => {
   const [isAddSessionOpen, setIsAddSessionOpen] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<Session["status"] | "all" | "needs-attention">("all");
 
   const { data: sessions = [], isLoading, error: queryError } = useQuery({
     queryKey: ["sessions"],
@@ -43,15 +46,15 @@ const Sessions = () => {
           .single();
 
         // Ensure session_type is valid
-        const sessionType = isValidSessionType(session.session_type) 
-          ? session.session_type 
+        const sessionType = isValidSessionType(session.session_type)
+          ? session.session_type
           : "video";
-        
+
         // Ensure status is valid
         const sessionStatus = isValidSessionStatus(session.status)
           ? session.status
           : "scheduled";
-        
+
         const processedSession: Session = {
           id: session.id,
           patient_id: session.patient_id,
@@ -70,7 +73,7 @@ const Sessions = () => {
             email: patientData?.email
           }
         };
-        
+
         return processedSession;
       }));
 
@@ -78,51 +81,69 @@ const Sessions = () => {
     },
   });
 
-  const statusCounts = sessions.reduce((acc, session) => {
-    acc[session.status] = (acc[session.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const activeSessionsCount = sessions.filter(session => session.status === "scheduled").length;
 
-  const filteredSessions = activeFilter 
-    ? sessions.filter(session => session.status === activeFilter)
-    : sessions;
+  const filteredSessions = sessions.filter(session => {
+    const matchesSearch = searchTerm === "" ||
+                          session.patient?.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          session.patient?.last_name.toLowerCase().includes(searchTerm.toLowerCase());
 
-  const handleFilterClick = (status: string | null) => {
-    setActiveFilter(status);
-  };
+    const matchesStatus = statusFilter === "all" ||
+                          (statusFilter === "needs-attention" && session.status === "scheduled") || // Assuming "Needs Attention" means scheduled
+                          (statusFilter === session.status);
 
-  const filtersElement = (
-    <div className="flex gap-2">
-      <SessionStatus 
-        label="All"
-        count={sessions.length}
-        active={activeFilter === null}
-        onClick={() => handleFilterClick(null)}
-      />
-      {Object.entries(statusCounts).map(([status, count]) => (
-        <SessionStatus 
-          key={status}
-          label={status.charAt(0).toUpperCase() + status.slice(1)}
-          count={count} 
-          status={status as Session["status"]}
-          active={activeFilter === status}
-          onClick={() => handleFilterClick(status)}
-        />
-      ))}
-    </div>
-  );
+    return matchesSearch && matchesStatus;
+  });
+
 
   return (
     <PageLayout
       title="Sessions"
-      action={{
-        label: "Add Session",
-        onClick: () => setIsAddSessionOpen(true),
-        icon: <Plus className="h-4 w-4" />,
-      }}
       isLoading={isLoading}
-      filters={filtersElement}
     >
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl font-bold">Sessions</h2>
+          <span className="text-muted-foreground text-sm">{activeSessionsCount} active sessions</span>
+        </div>
+        <Button onClick={() => setIsAddSessionOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Schedule Session
+        </Button>
+      </div>
+
+      <div className="flex items-center gap-4 mb-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search patient name..."
+            className="pl-8"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        <DropdownMenu onOpenChange={(open) => !open && setStatusFilter("all")}> {/* Reset filter on close if no selection */}
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="flex items-center gap-2">
+              {statusFilter === "all" ? "Needs Attention" : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => setStatusFilter("needs-attention")}>Needs Attention</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setStatusFilter("scheduled")}>Scheduled</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setStatusFilter("completed")}>Completed</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setStatusFilter("cancelled")}>Cancelled</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setStatusFilter("no-show")}>No Show</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setStatusFilter("all")}>All Statuses</DropdownMenuItem> {/* Added "All Statuses" option */}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Button variant="outline">More Filters</Button>
+      </div>
+
+
       {queryError ? (
         <div className="p-8 text-center">
           <p className="text-red-500">Error loading sessions: {queryError.message}</p>
@@ -131,15 +152,13 @@ const Sessions = () => {
         <DataTable
           columns={SessionColumns}
           data={filteredSessions}
-          filterKey="patient.last_name"
-          searchPlaceholder="Search by patient name..."
-          noDataMessage="No sessions found"
+          noDataMessage="No sessions found matching your criteria."
         />
       )}
-      
-      <AddSessionDialog 
-        open={isAddSessionOpen} 
-        onOpenChange={setIsAddSessionOpen} 
+
+      <AddSessionDialog
+        open={isAddSessionOpen}
+        onOpenChange={setIsAddSessionOpen}
       />
     </PageLayout>
   );

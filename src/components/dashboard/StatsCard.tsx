@@ -1,5 +1,6 @@
 
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 interface StatsCardProps {
   title: string;
@@ -12,6 +13,7 @@ interface StatsCardProps {
     positive: boolean;
   };
   type?: 'patients' | 'sessions' | 'orders' | 'consultations';
+  href?: string; // Add href prop for linking
 }
 
 export const StatsCard = ({
@@ -22,6 +24,7 @@ export const StatsCard = ({
   className,
   trend,
   type = 'patients',
+  href, // Destructure href prop
 }: StatsCardProps) => {
   // Map type to color classes
   const colorMap = {
@@ -49,9 +52,9 @@ export const StatsCard = ({
 
   const { iconBg, iconColor, borderColor } = colorMap[type];
 
-  return (
+  const content = (
     <div className={cn(
-      "p-6 bg-white rounded-lg shadow-sm border-l-4", 
+      "p-6 bg-white rounded-lg shadow-sm border-l-4",
       borderColor,
       className
     )}>
@@ -78,8 +81,8 @@ export const StatsCard = ({
         </div>
         {icon && (
           <div className={cn(
-            "flex items-center justify-center w-12 h-12 rounded-full", 
-            iconBg, 
+            "flex items-center justify-center w-12 h-12 rounded-full",
+            iconBg,
             iconColor
           )}>
             {icon}
@@ -88,4 +91,14 @@ export const StatsCard = ({
       </div>
     </div>
   );
+
+  if (href) {
+    return (
+      <Link to={href} className="block hover:shadow-md transition-shadow">
+        {content}
+      </Link>
+    );
+  }
+
+  return content;
 };

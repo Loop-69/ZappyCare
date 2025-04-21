@@ -9,6 +9,7 @@ import {
   getSortedRowModel,
   ColumnFiltersState,
   getFilteredRowModel,
+  RowSelectionState,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -20,7 +21,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, Dispatch, SetStateAction } from "react";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
@@ -30,6 +31,10 @@ interface DataTableProps<TData, TValue> {
   searchPlaceholder?: string;
   noDataMessage?: string;
   rowClassName?: (row: TData) => string;
+  onRowSelectionChange?: Dispatch<SetStateAction<RowSelectionState>>;
+  state?: {
+    rowSelection?: RowSelectionState;
+  };
 }
 
 export function DataTable<TData, TValue>({
@@ -39,10 +44,16 @@ export function DataTable<TData, TValue>({
   searchPlaceholder = "Search...",
   noDataMessage = "No records found",
   rowClassName,
+  onRowSelectionChange,
+  state,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  
+  const [internalRowSelection, setInternalRowSelection] = useState<RowSelectionState>({});
+
+  const rowSelection = state?.rowSelection ?? internalRowSelection;
+  const setRowSelection = onRowSelectionChange ?? setInternalRowSelection;
+
   const table = useReactTable({
     data,
     columns,
@@ -52,10 +63,13 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
+    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       columnFilters,
+      rowSelection,
     },
+    enableRowSelection: true, // Enable row selection
   });
 
   return (

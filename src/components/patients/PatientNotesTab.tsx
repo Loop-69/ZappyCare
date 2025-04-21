@@ -10,7 +10,7 @@ interface PatientNotesTabProps {
   patientId: string;
 }
 
-export function PatientNotesTab({ patientId }: PatientNotesTabProps) {
+export default function PatientNotesTab({ patientId }: PatientNotesTabProps) {
   const [isAddingNote, setIsAddingNote] = useState(false);
   const { notes, isLoading, addNote, editNote, deleteNote } = usePatientNotes(patientId);
 

@@ -1,10 +1,10 @@
-
 import { ColumnDef } from "@tanstack/react-table";
 import { Invoice } from "@/types";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, Eye, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const InvoiceColumns: ColumnDef<Invoice>[] = [
   {
@@ -181,6 +181,48 @@ export const InvoiceColumns: ColumnDef<Invoice>[] = [
     },
     cell: ({ row }) => (
       <div className="text-right">${(row.original.refunded_amount || 0).toFixed(2)}</div>
+    ),
+  },
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected()
+            ? true
+            : table.getIsSomePageRowsSelected()
+            ? "indeterminate"
+            : false
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => (
+      <div className="flex gap-2">
+        <Button variant="ghost" size="icon" onClick={() => {/* TODO: implement view */}} title="View">
+          <Eye className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => {/* TODO: implement edit */}} title="Edit">
+          <Edit className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => {/* TODO: implement delete */}} title="Delete">
+          <Trash2 className="h-4 w-4 text-red-500" />
+        </Button>
+      </div>
     ),
   },
 ];

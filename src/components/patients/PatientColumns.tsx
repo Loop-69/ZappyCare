@@ -13,136 +13,117 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Link } from "react-router-dom";
 import { NavigateFunction } from "react-router-dom";
+import { Patient } from "@/types/patient-types"; // Import the Patient type
 
-type PatientData = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string | null;
-  phone: string | null;
-  date_of_birth: string | null;
-  status: string;
-  created_at: string;
-};
+// Use the Patient type directly for column definitions
+export type PatientData = Patient;
 
-export const getPatientColumns = (navigate: NavigateFunction): ColumnDef<PatientData>[] => {
+import { Checkbox } from "@/components/ui/checkbox";
+
+export const getPatientColumns = (navigate: NavigateFunction, onEditClick: (patient: PatientData) => void): ColumnDef<PatientData>[] => {
   return [
     {
-      accessorKey: "first_name",
-      header: "First Name",
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected()
+              ? true
+              : table.getIsSomePageRowsSelected()
+              ? "indeterminate"
+              : false
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
     },
     {
-      accessorKey: "last_name",
-      header: "Last Name",
-    },
-    {
-      accessorKey: "email",
-      header: "Email",
+      accessorKey: "patient_info",
+      header: "PATIENT",
       cell: ({ row }) => {
         const patient = row.original;
-        const email = row.getValue("email") as string | null;
-        return email ? (
-          <Link to={`/patients/${patient.id}`} className="text-blue-600 hover:underline">
-            {email}
-          </Link>
-        ) : (
-          "—"
+        const fullName = `${patient.first_name} ${patient.last_name}`;
+        const email = patient.email;
+        const phone = patient.phone;
+
+        return (
+          <div className="flex flex-col">
+            <Link to={`/patients/${patient.id}`} className="text-blue-600 hover:underline font-medium">
+              {fullName}
+            </Link>
+            {email && (
+              <Link to={`/patients/${patient.id}`} className="text-muted-foreground text-sm hover:underline">
+                {email}
+              </Link>
+            )}
+            {phone && (
+              <span className="text-muted-foreground text-sm">{phone}</span>
+            )}
+          </div>
         );
       },
     },
     {
-      accessorKey: "phone",
-      header: "Phone",
+      accessorKey: "tags",
+      header: "TAGS",
       cell: ({ row }) => {
-        const phone = row.getValue("phone") as string | null;
-        return phone || "—";
+        const tags = row.original.medical_conditions; // Assuming medical_conditions can be used as tags
+        return tags && tags.length > 0 ? tags.join(", ") : "No Tags";
       },
     },
     {
-      accessorKey: "date_of_birth",
-      header: "Date of Birth",
+      accessorKey: "subscription_plan",
+      header: "SUBSCRIPTION PLAN",
       cell: ({ row }) => {
-        const dob = row.getValue("date_of_birth") as string | null;
-        return dob ? format(new Date(dob), "MMM d, yyyy") : "—";
+        // Subscription plan is not in Patient type, using a placeholder
+        return "None";
       },
     },
     {
-      accessorKey: "status",
-      header: "Status",
+      accessorKey: "next_appointment",
+      header: "NEXT APPOINTMENT",
       cell: ({ row }) => {
-        const status = row.getValue("status") as string;
-        
-        let color: "default" | "secondary" | "destructive" | "outline" = "default";
-        switch (status) {
-          case "Active":
-            color = "default";
-            break;
-          case "Inactive":
-            color = "secondary";
-            break;
-          case "Pending":
-            color = "outline";
-            break;
-          default:
-            color = "default";
-        }
-        
-        return <Badge variant={color}>{status}</Badge>;
+        // Next appointment is not in Patient type, using a placeholder
+        return "None scheduled";
       },
     },
     {
-      accessorKey: "created_at",
-      header: "Registration Date",
+      accessorKey: "doctor",
+      header: "DOCTOR",
       cell: ({ row }) => {
-        const createdAt = row.getValue("created_at") as string | null;
-        if (!createdAt) return "—";
-        
-        try {
-          const date = new Date(createdAt);
-          // Check if the date is valid
-          if (isNaN(date.getTime())) {
-            return "Invalid date";
-          }
-          return format(date, "MMM d, yyyy");
-        } catch (error) {
-          console.error("Error formatting date:", error, createdAt);
-          return "Invalid date";
-        }
+        const doctor = row.original.doctor_id; // Assuming doctor_id is the doctor
+        return doctor || "Not assigned";
       },
     },
     {
       id: "actions",
+      header: "ACTIONS",
       cell: ({ row }) => {
         const patient = row.original;
-
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to={`/patients/${patient.id}`} className="cursor-pointer">
-                  <Eye className="mr-2 h-4 w-4" />
-                  View Details
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                className="cursor-pointer"
-                onClick={() => navigate(`/patients/edit/${patient.id}`)}
-              >
-              <Trash className="mr-2 h-4 w-4" />
-              Delete Patient
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
+          <div className="flex gap-2">
+            <Button variant="ghost" size="icon" onClick={() => navigate(`/patients/${patient.id}`)} title="View">
+              <Eye className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => onEditClick(patient)} title="Edit">
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => {/* TODO: implement delete */}} title="Delete">
+              <Trash className="h-4 w-4 text-red-500" />
+            </Button>
+          </div>
+        );
+      },
     },
-  },
-];
+  ];
 };

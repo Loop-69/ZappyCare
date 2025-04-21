@@ -13,7 +13,7 @@ interface PatientOrdersTabProps {
   patientId: string;
 }
 
-export function PatientOrdersTab({ patientId }: PatientOrdersTabProps) {
+export default function PatientOrdersTab({ patientId }: PatientOrdersTabProps) {
   const [isAddOrderDialogOpen, setIsAddOrderDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   

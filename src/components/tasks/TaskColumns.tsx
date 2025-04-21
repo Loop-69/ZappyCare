@@ -112,6 +112,6 @@ export const TaskColumns: ColumnDef<Task>[] = [
   {
     id: "actions",
     header: "Actions",
-    cell: ({ row }) => <TaskActions task={row.original} />,
+    cell: ({ row }) => <TaskActions task={row.original} iconOnly />,
   },
 ];

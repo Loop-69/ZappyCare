@@ -3,9 +3,10 @@ export interface Order {
   id: string;
   patient_id: string;
   order_date: string;
+  medication?: string;
   status: string;
   total_amount: number;
-  shipping_address?: Record<string, any> | null;
+  shipping_address?: Record<string, unknown> | string | null;
   pharmacy_id?: string | null;
   session_id?: string | null;
   payment_method?: string | null;

@@ -110,31 +110,39 @@ export function AddInvoiceDialog({ open, onClose, onSuccess }: AddInvoiceDialogP
     console.log("Attempting to create invoice with data:", data); // Log the data being submitted
     try {
       const selectedPatient = patients.find(p => p.id === data.patient_id);
-      
+      console.log("Selected patient:", selectedPatient); // Log selected patient
+
       // Generate invoice ID (INV-XXX)
       const { count, error: countError } = await supabase
         .from('invoices')
         .select('*', { count: 'exact', head: true });
 
-      if (countError) throw countError;
-      
+      if (countError) {
+        console.error('Supabase count error:', countError); // Log Supabase count error
+        throw countError;
+      }
+      console.log("Invoice count:", count); // Log invoice count
+
       const invoiceNumber = (count || 0) + 1;
       const invoice_id = `INV-${invoiceNumber.toString().padStart(3, '0')}`;
-      
+      console.log("Generated invoice ID:", invoice_id); // Log generated invoice ID
+
       // Calculate total amount
       const amount = data.items.reduce(
-        (sum, item) => sum + (item.quantity * item.unit_price), 
+        (sum, item) => sum + (item.quantity * item.unit_price),
         0
       );
+      console.log("Calculated total amount:", amount); // Log calculated amount
 
       // Prepare items with total field
       const itemsWithTotal = data.items.map(item => ({
         ...item,
         total: item.quantity * item.unit_price
       }));
+      console.log("Items with total:", itemsWithTotal); // Log items with total
 
       // Insert the invoice
-      const { error } = await supabase.from('invoices').insert({
+      const { data: insertedInvoice, error: insertError } = await supabase.from('invoices').insert({
         patient_id: data.patient_id,
         issue_date: new Date().toISOString(),
         due_date: data.due_date.toISOString(),
@@ -145,18 +153,19 @@ export function AddInvoiceDialog({ open, onClose, onSuccess }: AddInvoiceDialogP
         email: data.email,
         patient_name: `${selectedPatient?.first_name} ${selectedPatient?.last_name}`,
         items: itemsWithTotal,
-      });
+      }).select(); // Select the inserted data to check for errors
 
-      if (error) {
-        console.error('Supabase insertion error:', error); // Log Supabase error
-        throw error;
+      if (insertError) {
+        console.error('Supabase insertion error:', insertError); // Log Supabase insertion error
+        throw insertError;
       }
+      console.log("Supabase insertion result:", insertedInvoice); // Log insertion result
 
       console.log("Invoice created successfully"); // Log success
       toast.success("Invoice created successfully");
       onSuccess();
       onClose();
-    } catch (error) {
+    } catch (error: any) { // Catch error as any to access message property
       console.error('Error creating invoice:', error);
       toast.error(`Failed to create invoice: ${error.message}`); // Include error message in toast
     }
@@ -224,22 +233,22 @@ export function AddInvoiceDialog({ open, onClose, onSuccess }: AddInvoiceDialogP
               {items.map((item, index) => (
                 <div key={index} className="flex items-center gap-2 mb-2">
                   <Input
-                    className="flex-1"
+                    className="flex-[3]" // Adjusted flex basis
                     placeholder="Description"
                     value={item.description}
                     onChange={(e) => updateItemField(index, 'description', e.target.value)}
                   />
                   <Input
                     type="number"
-                    className="w-20"
-                    placeholder="Qty"
+                    className="flex-[1] w-20" // Adjusted flex basis and width
+                    placeholder="1" // Changed placeholder to match image
                     value={item.quantity}
                     min={1}
                     onChange={(e) => updateItemField(index, 'quantity', parseInt(e.target.value) || 1)}
                   />
                   <Input
                     type="number"
-                    className="w-32"
+                    className="flex-[2] w-32" // Adjusted flex basis and width
                     placeholder="Unit Price"
                     value={item.unit_price}
                     min={0}
@@ -261,8 +270,8 @@ export function AddInvoiceDialog({ open, onClose, onSuccess }: AddInvoiceDialogP
               <div className="flex justify-between items-center mt-2">
                 <Button
                   type="button"
-                  variant="ghost"
-                  className="text-red-500 flex items-center"
+                  variant="link" // Changed variant to link
+                  className="text-red-500 flex items-center p-0" // Adjusted padding
                   onClick={addItem}
                 >
                   <Plus className="h-4 w-4 mr-1" /> Add Line Item
@@ -292,7 +301,7 @@ export function AddInvoiceDialog({ open, onClose, onSuccess }: AddInvoiceDialogP
                           {field.value ? (
                             format(field.value, "MM/dd/yyyy")
                           ) : (
-                            <span>Pick a date</span>
+                            <span>mm/dd/yyyy</span> // Changed placeholder to match image
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -320,7 +329,7 @@ export function AddInvoiceDialog({ open, onClose, onSuccess }: AddInvoiceDialogP
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button type="submit" className="bg-red-500 hover:bg-red-600"> {/* Adjusted button styling */}
                 Create Invoice
               </Button>
             </DialogFooter>
