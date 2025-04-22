@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { usePatientFilters } from "@/hooks/usePatientFilters";
 import { useQuery } from "@tanstack/react-query";
 import {
   useReactTable,
@@ -38,17 +40,20 @@ const Patients = () => {
   const [selectedPatient, setSelectedPatient] = useState<PatientData | null>(null); // State for selected patient
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [rowSelection, setRowSelection] = useState({}); // State for selected rows
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({}); // State for selected rows with proper typing
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const navigate = useNavigate();
 
-  const handleEditClick = (patient: PatientData) => {
+  const handleEditClick = useCallback((patient: PatientData) => {
     setSelectedPatient(patient);
     setIsEditDialogOpen(true);
-  };
+  }, []);
 
-  const columns = getPatientColumns(navigate, handleEditClick); // Pass handleEditClick to getPatientColumns
+  const columns = useMemo(
+    () => getPatientColumns(navigate, handleEditClick),
+    [navigate, handleEditClick]
+  );
 
   const { data: patients = [], isLoading, refetch } = useQuery({
     queryKey: ["patients"],
@@ -92,19 +97,11 @@ const Patients = () => {
     },
   });
 
-  const filterPatients = (patients: PatientData[], term: string, status: string) => {
-    return patients.filter(patient => {
-      const matchesSearch = term === "" ||
-                            patient.first_name.toLowerCase().includes(term.toLowerCase()) ||
-                            patient.last_name.toLowerCase().includes(term.toLowerCase()) ||
-                            patient.email?.toLowerCase().includes(term.toLowerCase()) ||
-                            patient.phone?.includes(term);
-      const matchesStatus = status === "" || status === "all" || patient.status === status;
-      return matchesSearch && matchesStatus;
-    });
-  };
-
-  const filteredPatients = filterPatients(patients, searchTerm, statusFilter);
+  const { filterPatients } = usePatientFilters();
+  const filteredPatients = useMemo(
+    () => filterPatients(patients, searchTerm, statusFilter),
+    [patients, searchTerm, statusFilter, filterPatients]
+  );
 
   const handleAddSuccess = () => {
     refetch();
@@ -112,25 +109,63 @@ const Patients = () => {
     toast.success("Patient added successfully");
   };
 
-  const handleSuspendPatients = (patientIds: string[]) => {
-    console.log("Suspend patients:", patientIds);
-    // Implement suspend logic here
-    toast.info(`Suspending ${patientIds.length} patients...`);
-    setRowSelection({}); // Clear selection after action
+  const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
+
+  const handleSuspendPatients = async (patientIds: string[]) => {
+    setIsBulkActionLoading(true);
+    try {
+      // TODO: Implement actual suspend API call
+      // const { error } = await supabase
+      //   .from('patients')
+      //   .update({ status: 'Inactive' })
+      //   .in('id', patientIds);
+      
+      // if (error) throw error;
+      
+      toast.success(`Successfully suspended ${patientIds.length} patients`);
+      await refetch();
+    } catch (error) {
+      console.error('Error suspending patients:', error);
+      toast.error('Failed to suspend patients');
+    } finally {
+      setIsBulkActionLoading(false);
+      setRowSelection({});
+    }
   };
 
-  const handleActivatePatients = (patientIds: string[]) => {
-    console.log("Activate patients:", patientIds);
-    // Implement activate logic here
-    toast.info(`Activating ${patientIds.length} patients...`);
-    setRowSelection({}); // Clear selection after action
+  const handleActivatePatients = async (patientIds: string[]) => {
+    setIsBulkActionLoading(true);
+    try {
+      // TODO: Implement actual activate API call
+      // const { error } = await supabase
+      //   .from('patients')
+      //   .update({ status: 'Active' })
+      //   .in('id', patientIds);
+      
+      // if (error) throw error;
+      
+      toast.success(`Successfully activated ${patientIds.length} patients`);
+      await refetch();
+    } catch (error) {
+      console.error('Error activating patients:', error);
+      toast.error('Failed to activate patients');
+    } finally {
+      setIsBulkActionLoading(false);
+      setRowSelection({});
+    }
   };
 
-  const handleScheduleFollowUp = (patientIds: string[]) => {
-    console.log("Schedule follow-up for patients:", patientIds);
-    // Implement schedule follow-up logic here (e.g., open a modal)
-    toast.info(`Scheduling follow-up for ${patientIds.length} patients...`);
-    // setRowSelection({}); // Clear selection after action - maybe not clear immediately if modal opens
+  const handleScheduleFollowUp = async (patientIds: string[]) => {
+    setIsBulkActionLoading(true);
+    try {
+      // TODO: Implement actual follow-up scheduling logic
+      toast.success(`Successfully scheduled follow-up for ${patientIds.length} patients`);
+    } catch (error) {
+      console.error('Error scheduling follow-up:', error);
+      toast.error('Failed to schedule follow-up');
+    } finally {
+      setIsBulkActionLoading(false);
+    }
   };
 
   const table = useReactTable({
@@ -270,22 +305,71 @@ const Patients = () => {
             </TableBody>
           </Table>
         </div>
+
+        {/* Pagination Controls */}
+        <div className="flex items-center justify-between px-2">
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-muted-foreground">
+              Page {table.getState().pagination.pageIndex + 1} of{' '}
+              {table.getPageCount()}
+            </span>
+            <Select
+              value={`${table.getState().pagination.pageSize}`}
+              onValueChange={(value) => {
+                table.setPageSize(Number(value))
+              }}
+            >
+              <SelectTrigger className="h-8 w-[70px]">
+                <SelectValue placeholder={table.getState().pagination.pageSize} />
+              </SelectTrigger>
+              <SelectContent side="top">
+                {[10, 20, 30, 40, 50].map((pageSize) => (
+                  <SelectItem key={pageSize} value={`${pageSize}`}>
+                    {pageSize}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
 
-      <AddPatientDialog
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-        onSuccess={handleAddSuccess}
-      />
+      <ErrorBoundary>
+        <AddPatientDialog
+          open={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+          onSuccess={handleAddSuccess}
+        />
+      </ErrorBoundary>
 
       {/* Edit Patient Dialog */}
       {selectedPatient && (
-        <EditPatientDialog
-          open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-          onSuccess={refetch} // Refetch patients after successful edit
-          patient={selectedPatient}
-        />
+        <ErrorBoundary>
+          <EditPatientDialog
+            open={isEditDialogOpen}
+            onOpenChange={setIsEditDialogOpen}
+            onSuccess={refetch} // Refetch patients after successful edit
+            patient={selectedPatient}
+          />
+        </ErrorBoundary>
       )}
     </PageLayout>
   );

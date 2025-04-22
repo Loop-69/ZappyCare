@@ -1,7 +1,6 @@
 
 import { Link } from "react-router-dom";
 import { Navigation } from "./sidebar/Navigation";
-import { UserProfile } from "./sidebar/UserProfile";
 import { sidebarRoutes } from "./sidebar/routes";
 
 export default function Sidebar() {
@@ -13,9 +12,6 @@ export default function Sidebar() {
         </Link>
       </div>
       <Navigation routes={sidebarRoutes} />
-      <div className="mt-auto border-t border-gray-100">
-        <UserProfile />
-      </div>
     </div>
   );
 }

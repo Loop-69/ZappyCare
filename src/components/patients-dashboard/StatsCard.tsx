@@ -1,13 +1,14 @@
 
 import { Card } from "@/components/ui/card";
 import { LucideIcon } from "lucide-react";
+import { ReactNode } from "react";
 
 interface StatsCardProps {
   icon: LucideIcon;
   iconBgColor: string;
   iconColor: string;
   label: string;
-  value: number | string;
+  value: number | string | object;
 }
 
 export const StatsCard = ({
@@ -17,6 +18,13 @@ export const StatsCard = ({
   label,
   value
 }: StatsCardProps) => {
+  const renderValue = (): ReactNode => {
+    if (typeof value === 'object') {
+      return JSON.stringify(value);
+    }
+    return value;
+  };
+
   return (
     <Card className="p-4">
       <div className="flex items-center gap-4">
@@ -25,7 +33,7 @@ export const StatsCard = ({
         </div>
         <div>
           <p className="text-sm font-medium text-muted-foreground">{label}</p>
-          <h3 className="text-2xl font-bold">{value}</h3>
+          <h3 className="text-2xl font-bold">{renderValue()}</h3>
         </div>
       </div>
     </Card>

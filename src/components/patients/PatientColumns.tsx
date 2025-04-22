@@ -18,9 +18,10 @@ import { Patient } from "@/types/patient-types"; // Import the Patient type
 // Use the Patient type directly for column definitions
 export type PatientData = Patient;
 
+// Make sure to import Checkbox
 import { Checkbox } from "@/components/ui/checkbox";
 
-export const getPatientColumns = (navigate: NavigateFunction, onEditClick: (patient: PatientData) => void): ColumnDef<PatientData>[] => {
+export const getPatientColumns = (navigate: NavigateFunction, onEdit: (patient: PatientData) => void): ColumnDef<PatientData>[] => {
   return [
     {
       id: "select",
@@ -115,7 +116,7 @@ export const getPatientColumns = (navigate: NavigateFunction, onEditClick: (pati
             <Button variant="ghost" size="icon" onClick={() => navigate(`/patients/${patient.id}`)} title="View">
               <Eye className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => onEditClick(patient)} title="Edit">
+            <Button variant="ghost" size="icon" onClick={() => onEdit(patient)} title="Edit">
               <Edit className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="icon" onClick={() => {/* TODO: implement delete */}} title="Delete">

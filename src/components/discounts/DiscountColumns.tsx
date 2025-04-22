@@ -3,16 +3,17 @@ import { Discount } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash } from "lucide-react";
+import { Pencil, Trash } from "lucide-react"; 
 import { Checkbox } from "@/components/ui/checkbox";
+import { ErrorBoundary } from "react-error-boundary";
 import { DiscountActions } from "./DiscountActions";
 
 interface DiscountColumnsProps {
   onEdit: (discount: Discount) => void;
-  onDelete: (discount: Discount) => void; // Added onDelete prop
+  onDelete: (discount: Discount) => void;
 }
 
-const DiscountColumns = ({ onEdit, onDelete }: DiscountColumnsProps): ColumnDef<Discount>[] => { // Added onDelete to destructuring
+const DiscountColumns = ({ onEdit, onDelete }: DiscountColumnsProps): ColumnDef<Discount>[] => {
   return [
     {
       id: "select",

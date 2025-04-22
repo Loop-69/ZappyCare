@@ -23,6 +23,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Patient, Invoice, InvoiceItem } from "@/types";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import { PatientSelect } from "@/components/patients/PatientSelect";
+import { DatabaseSelect } from "@/components/ui/database-select";
 
 const invoiceSchema = z.object({
   patient_id: z.string().min(1, "Patient is required"),
@@ -51,6 +53,16 @@ export function AddInvoiceDialog({ open, onClose, onSuccess }: AddInvoiceDialogP
   const [items, setItems] = useState<{ description: string; quantity: number; unit_price: number }[]>([{ description: "", quantity: 1, unit_price: 0 }]);
   const [total, setTotal] = useState(0);
   
+  // Fetch products for line items
+  const { data: products = [] } = useQuery({
+    queryKey: ['products'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('products').select('*');
+      if (error) throw error;
+      return data;
+    }
+  });
+  
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: {
@@ -61,7 +73,7 @@ export function AddInvoiceDialog({ open, onClose, onSuccess }: AddInvoiceDialogP
   });
 
   // Fetch patients for the dropdown
-  const { data: patients = [] } = useQuery({
+  const { data: patients = [], isLoading: patientsLoading } = useQuery({
     queryKey: ['patients'],
     queryFn: async () => {
       const { data, error } = await supabase.from('patients').select('*');
@@ -165,7 +177,7 @@ export function AddInvoiceDialog({ open, onClose, onSuccess }: AddInvoiceDialogP
       toast.success("Invoice created successfully");
       onSuccess();
       onClose();
-    } catch (error: any) { // Catch error as any to access message property
+    } catch (error: Error | unknown) {
       console.error('Error creating invoice:', error);
       toast.error(`Failed to create invoice: ${error.message}`); // Include error message in toast
     }
@@ -173,7 +185,7 @@ export function AddInvoiceDialog({ open, onClose, onSuccess }: AddInvoiceDialogP
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Invoice</DialogTitle>
         </DialogHeader>
@@ -185,30 +197,18 @@ export function AddInvoiceDialog({ open, onClose, onSuccess }: AddInvoiceDialogP
                 control={form.control}
                 name="patient_id"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Customer Name</FormLabel>
-                    <Select 
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        handlePatientSelect(value);
-                      }}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Search or Select Patient" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {patients.map((patient) => (
-                          <SelectItem key={patient.id} value={patient.id}>
-                            {patient.first_name} {patient.last_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
+                  <PatientSelect
+                    value={field.value}
+                    onChange={field.onChange}
+                    onPatientSelect={(patient) => {
+                      if (patient.email) {
+                        form.setValue('email', patient.email);
+                      }
+                    }}
+                    label="Customer"
+                    placeholder="Select a customer"
+                    required
+                  />
                 )}
               />
 
@@ -219,67 +219,12 @@ export function AddInvoiceDialog({ open, onClose, onSuccess }: AddInvoiceDialogP
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="Email" {...field} />
+                      <Input placeholder="customer@example.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
-
-            <div>
-              <h3 className="font-medium mb-2">Line Items</h3>
-              
-              {items.map((item, index) => (
-                <div key={index} className="flex items-center gap-2 mb-2">
-                  <Input
-                    className="flex-[3]" // Adjusted flex basis
-                    placeholder="Description"
-                    value={item.description}
-                    onChange={(e) => updateItemField(index, 'description', e.target.value)}
-                  />
-                  <Input
-                    type="number"
-                    className="flex-[1] w-20" // Adjusted flex basis and width
-                    placeholder="1" // Changed placeholder to match image
-                    value={item.quantity}
-                    min={1}
-                    onChange={(e) => updateItemField(index, 'quantity', parseInt(e.target.value) || 1)}
-                  />
-                  <Input
-                    type="number"
-                    className="flex-[2] w-32" // Adjusted flex basis and width
-                    placeholder="Unit Price"
-                    value={item.unit_price}
-                    min={0}
-                    step={0.01}
-                    onChange={(e) => updateItemField(index, 'unit_price', parseFloat(e.target.value) || 0)}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeItem(index)}
-                    disabled={items.length === 1}
-                  >
-                    <Trash2 className="h-4 w-4 text-gray-400" />
-                  </Button>
-                </div>
-              ))}
-              
-              <div className="flex justify-between items-center mt-2">
-                <Button
-                  type="button"
-                  variant="link" // Changed variant to link
-                  className="text-red-500 flex items-center p-0" // Adjusted padding
-                  onClick={addItem}
-                >
-                  <Plus className="h-4 w-4 mr-1" /> Add Line Item
-                </Button>
-                <div className="text-right">
-                  <span className="font-medium">Total: ${total.toFixed(2)}</span>
-                </div>
-              </div>
             </div>
 
             <FormField
@@ -294,14 +239,14 @@ export function AddInvoiceDialog({ open, onClose, onSuccess }: AddInvoiceDialogP
                         <Button
                           variant="outline"
                           className={cn(
-                            "pl-3 text-left font-normal",
+                            "w-full pl-3 text-left font-normal",
                             !field.value && "text-muted-foreground"
                           )}
                         >
                           {field.value ? (
-                            format(field.value, "MM/dd/yyyy")
+                            format(field.value, "PPP")
                           ) : (
-                            <span>mm/dd/yyyy</span> // Changed placeholder to match image
+                            <span>Pick a date</span>
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -312,11 +257,7 @@ export function AddInvoiceDialog({ open, onClose, onSuccess }: AddInvoiceDialogP
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
-                        disabled={(date) =>
-                          date < new Date()
-                        }
                         initialFocus
-                        className="pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
@@ -325,13 +266,78 @@ export function AddInvoiceDialog({ open, onClose, onSuccess }: AddInvoiceDialogP
               )}
             />
 
+            <div>
+              <h3 className="font-medium mb-2">Line Items</h3>
+              
+              <div className="space-y-2">
+                {items.map((item, index) => (
+                  <div key={index} className="flex items-end gap-2 mb-2">
+                    <div className="flex-1">
+                      <DatabaseSelect
+                        table="products"
+                        valueField="id"
+                        displayField="name"
+                        value={item.product_id || ""}
+                        onChange={(value) => {
+                          const product = products.find(p => p.id === value);
+                          if (product) {
+                            updateItemField(index, "description", product.name);
+                            updateItemField(index, "unit_price", product.price || 0);
+                            updateItemField(index, "product_id", value);
+                          }
+                        }}
+                        placeholder="Select a product"
+                        queryKey="products-select"
+                      />
+                    </div>
+                    <Input
+                      type="number"
+                      value={item.quantity}
+                      onChange={(e) => updateItemField(index, "quantity", parseInt(e.target.value) || 1)}
+                      className="w-20"
+                      min={1}
+                    />
+                    <Input
+                      type="number"
+                      value={item.unit_price}
+                      onChange={(e) => updateItemField(index, "unit_price", parseFloat(e.target.value) || 0)}
+                      className="w-24"
+                      step="0.01"
+                      min={0}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeItem(index)}
+                      disabled={items.length === 1}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={addItem}
+                >
+                  <Plus className="h-4 w-4 mr-2" /> Add Item
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <div>Total: ${total.toFixed(2)}</div>
+            </div>
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-red-500 hover:bg-red-600"> {/* Adjusted button styling */}
-                Create Invoice
-              </Button>
+              <Button type="submit">Create Invoice</Button>
             </DialogFooter>
           </form>
         </Form>
