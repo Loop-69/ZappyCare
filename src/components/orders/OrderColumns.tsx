@@ -192,6 +192,31 @@ function OrderActions({ order, iconOnly }: OrderActionsProps) {
 
 export const pendingOrderColumns: ColumnDef<Order>[] = [
   {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected()
+            ? true
+            : table.getIsSomePageRowsSelected()
+            ? "indeterminate"
+            : false
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
     accessorKey: "order_date",
     header: "ORDER DATE",
     cell: ({ row }) => format(new Date(row.getValue("order_date")), "PP"),
@@ -250,6 +275,15 @@ export const pendingOrderColumns: ColumnDef<Order>[] = [
       </div>
     ),
   },
+  
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => <OrderActions order={row.original} iconOnly />,
+  },
+];
+
+export const processingOrderColumns: ColumnDef<Order>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -275,14 +309,6 @@ export const pendingOrderColumns: ColumnDef<Order>[] = [
     enableSorting: false,
     enableHiding: false,
   },
-  {
-    id: "actions",
-    header: "Actions",
-    cell: ({ row }) => <OrderActions order={row.original} iconOnly />,
-  },
-];
-
-export const processingOrderColumns: ColumnDef<Order>[] = [
   {
     accessorKey: "order_date",
     header: "ORDER DATE",
@@ -333,6 +359,15 @@ export const processingOrderColumns: ColumnDef<Order>[] = [
       </div>
     ),
   },
+  
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => <OrderActions order={row.original} iconOnly />,
+  },
+];
+
+export const shippedOrderColumns: ColumnDef<Order>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -358,14 +393,6 @@ export const processingOrderColumns: ColumnDef<Order>[] = [
     enableSorting: false,
     enableHiding: false,
   },
-  {
-    id: "actions",
-    header: "Actions",
-    cell: ({ row }) => <OrderActions order={row.original} iconOnly />,
-  },
-];
-
-export const shippedOrderColumns: ColumnDef<Order>[] = [
   {
     accessorKey: "order_date",
     header: "ORDER DATE",
@@ -438,31 +465,7 @@ export const shippedOrderColumns: ColumnDef<Order>[] = [
       </div>
     ),
   },
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected()
-            ? true
-            : table.getIsSomePageRowsSelected()
-            ? "indeterminate"
-            : false
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+  
   {
     id: "actions",
     header: "Actions",
