@@ -31,12 +31,14 @@ export interface SidebarRoute {
 }
 
 export const sidebarRoutes: SidebarRoute[] = [
+  // Patient Specific Routes (Keep at top or bottom based on convention)
   {
     href: "/",
     label: "Home",
     icon: <Home className="h-5 w-5" />,
     color: "text-sky-500",
     bgColor: "bg-sky-50",
+    isPatientOnly: true, // Assuming Home is patient-specific
   },
   {
     href: "/records",
@@ -63,19 +65,22 @@ export const sidebarRoutes: SidebarRoute[] = [
     isPatientOnly: true,
   },
   {
+    href: "/patients-dashboard",
+    label: "Patients Dashboard",
+    icon: <UsersRound className="h-5 w-5" />,
+    color: "text-purple-500",
+    bgColor: "bg-purple-50",
+    // Assuming this is also patient-specific or general
+  },
+
+  // Admin/Staff Routes (Ordered as per image)
+  {
     href: "/dashboard",
     label: "Dashboard",
     icon: <LayoutDashboard className="h-5 w-5" />,
     color: "text-orange-500",
     bgColor: "bg-orange-50",
     isAdminOnly: true,
-  },
-  {
-    href: "/patients-dashboard",
-    label: "Patients Dashboard",
-    icon: <UsersRound className="h-5 w-5" />,
-    color: "text-purple-500",
-    bgColor: "bg-purple-50",
   },
   {
     href: "/patients",
@@ -85,53 +90,11 @@ export const sidebarRoutes: SidebarRoute[] = [
     bgColor: "bg-yellow-50",
   },
   {
-    href: "/pharmacies",
-    label: "Pharmacies",
+    href: "/consultations",
+    label: "Consultations",
     icon: <Calendar className="h-5 w-5" />,
     color: "text-emerald-500",
     bgColor: "bg-emerald-50",
-  },
-  {
-    href: "/invoices",
-    label: "Invoices",
-    icon: <ShoppingCart className="h-5 w-5" />,
-    color: "text-rose-500",
-    bgColor: "bg-rose-50",
-  },
-  {
-    href: "/products",
-    label: "Products",
-    icon: <Package className="h-5 w-5" />,
-    color: "text-pink-500",
-    bgColor: "bg-pink-50",
-  },
-  {
-    href: "/orders",
-    label: "Orders",
-    icon: <Package className="h-5 w-5" />,
-    color: "text-fuchsia-500",
-    bgColor: "bg-fuchsia-50",
-  },
-  {
-    href: "/tasks",
-    label: "Tasks",
-    icon: <ListChecks className="h-5 w-5" />,
-    color: "text-lime-500",
-    bgColor: "bg-lime-50",
-  },
-  {
-    href: "/tags",
-    label: "Tags",
-    icon: <Tag className="h-5 w-5" />,
-    color: "text-teal-500",
-    bgColor: "bg-teal-50",
-  },
-  {
-    href: "/discounts",
-    label: "Discounts",
-    icon: <Percent className="h-5 w-5" />,
-    color: "text-indigo-500",
-    bgColor: "bg-indigo-50",
   },
   {
     href: "/sessions",
@@ -141,11 +104,39 @@ export const sidebarRoutes: SidebarRoute[] = [
     bgColor: "bg-violet-50",
   },
   {
-    href: "/services",
-    label: "Services",
-    icon: <FileText className="h-5 w-5" />,
-    color: "text-stone-500",
-    bgColor: "bg-stone-50",
+    href: "/orders",
+    label: "Orders",
+    icon: <Package className="h-5 w-5" />,
+    color: "text-fuchsia-500",
+    bgColor: "bg-fuchsia-50",
+  },
+  {
+    href: "/products",
+    label: "Products",
+    icon: <Package className="h-5 w-5" />,
+    color: "text-pink-500",
+    bgColor: "bg-pink-50",
+  },
+  {
+    href: "/discounts",
+    label: "Discounts",
+    icon: <Percent className="h-5 w-5" />,
+    color: "text-indigo-500",
+    bgColor: "bg-indigo-50",
+  },
+  {
+    href: "/invoices",
+    label: "Invoices",
+    icon: <ShoppingCart className="h-5 w-5" />,
+    color: "text-rose-500",
+    bgColor: "bg-rose-50",
+  },
+  {
+    href: "/tasks",
+    label: "Tasks",
+    icon: <ListChecks className="h-5 w-5" />,
+    color: "text-lime-500",
+    bgColor: "bg-lime-50",
   },
   {
     href: "/providers",
@@ -155,18 +146,32 @@ export const sidebarRoutes: SidebarRoute[] = [
     bgColor: "bg-amber-50",
   },
   {
+    href: "/pharmacies",
+    label: "Pharmacies",
+    icon: <Calendar className="h-5 w-5" />, // Consider changing icon if needed
+    color: "text-emerald-500",
+    bgColor: "bg-emerald-50",
+  },
+  {
     href: "/insurance",
     label: "Insurance",
-    icon: <Percent className="h-5 w-5" />,
+    icon: <Percent className="h-5 w-5" />, // Consider changing icon if needed
     color: "text-indigo-500",
     bgColor: "bg-indigo-50",
   },
   {
-    href: "/consultations",
-    label: "Consultations",
-    icon: <Calendar className="h-5 w-5" />,
-    color: "text-emerald-500",
-    bgColor: "bg-emerald-50",
+    href: "/services",
+    label: "Services",
+    icon: <FileText className="h-5 w-5" />,
+    color: "text-stone-500",
+    bgColor: "bg-stone-50",
+  },
+  {
+    href: "/tags",
+    label: "Tags",
+    icon: <Tag className="h-5 w-5" />,
+    color: "text-teal-500",
+    bgColor: "bg-teal-50",
   },
   {
     href: "/messages",
@@ -183,18 +188,20 @@ export const sidebarRoutes: SidebarRoute[] = [
     bgColor: "bg-gray-50",
   },
   {
-    href: "/ai-insights",
-    label: "AI Insights",
-    icon: <BrainCircuit className="h-5 w-5" />,
-    color: "text-purple-500",
-    bgColor: "bg-purple-50",
-  },
-  {
     href: "/forms",
     label: "Forms",
     icon: <FormInput className="h-5 w-5" />,
     color: "text-blue-500",
     bgColor: "bg-blue-50",
+  },
+  // Other Admin Routes
+  {
+    href: "/ai-insights",
+    label: "AI Insights",
+    icon: <BrainCircuit className="h-5 w-5" />,
+    color: "text-purple-500",
+    bgColor: "bg-purple-50",
+    isAdminOnly: true, // Assuming AI Insights is admin-only
   },
   // AI Dashboard Sub-pages
   {

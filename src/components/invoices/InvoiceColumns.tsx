@@ -5,9 +5,18 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowUpDown, Eye, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { AddInvoiceDialog } from "./AddInvoiceDialog";
 
-export const InvoiceColumns: ColumnDef<Invoice>[] = [
+interface InvoiceColumnsProps {
+  onView: (invoice: Invoice) => void;
+  onEdit: (invoice: Invoice) => void;
+  onDelete: (invoice: Invoice) => void;
+}
+
+export const getInvoiceColumns = ({
+  onView,
+  onEdit,
+  onDelete,
+}: InvoiceColumnsProps): ColumnDef<Invoice>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -215,13 +224,23 @@ export const InvoiceColumns: ColumnDef<Invoice>[] = [
     header: "Actions",
     cell: ({ row }) => (
       <div className="flex gap-2">
-        <Button variant="ghost" size="icon" onClick={() => AddInvoiceDialog()} title="View">
-          <Eye className="h-4 w-4" />
+        <Button variant="outline" size="icon" onClick={() => onView(row.original)} title="View Invoice">
+          <Eye className="h-4 w-4 text-blue-500" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => {/* TODO: implement edit */}} title="Edit">
-          <Edit className="h-4 w-4" />
+        <Button variant="outline" size="icon" onClick={() => onEdit(row.original)} title="Edit Invoice">
+          <Edit className="h-4 w-4 text-amber-500" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => {/* TODO: implement delete */}} title="Delete">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          onClick={() => {
+            if (confirm('Are you sure you want to delete this invoice?')) {
+              onDelete(row.original)
+            }
+          }} 
+          title="Delete Invoice"
+          className="hover:bg-red-50"
+        >
           <Trash2 className="h-4 w-4 text-red-500" />
         </Button>
       </div>
