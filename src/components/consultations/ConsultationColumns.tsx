@@ -28,7 +28,9 @@ const getStatusBadge = (status: string) => {
   }
 };
 
-export const consultationColumns: ColumnDef<any>[] = [
+import { Consultation } from "@/types/consultation-types";
+
+export const consultationColumns: ColumnDef<Consultation>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -105,13 +107,13 @@ export const consultationColumns: ColumnDef<any>[] = [
     id: "actions",
     cell: ({ row }) => (
       <div className="flex gap-2">
-        <Button variant="ghost" size="icon" onClick={() => {/* TODO: implement view */}} title="View">
+        <Button variant="ghost" size="icon" onClick={() => { /* TODO: Implement view consultation logic */ }} title="View">
           <Eye className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => {/* TODO: implement edit */}} title="Edit">
+        <Button variant="ghost" size="icon" onClick={() => { /* TODO: Implement edit consultation logic */ }} title="Edit">
           <Edit className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => {/* TODO: implement delete */}} title="Delete">
+        <Button variant="ghost" size="icon" onClick={() => { /* TODO: Implement delete consultation logic */ }} title="Delete" disabled={row.original.status === 'Completed'}>
           <Trash2 className="h-4 w-4 text-red-500" />
         </Button>
       </div>

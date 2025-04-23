@@ -4,16 +4,20 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 
+import { ConsultationFormValues } from "../ConsultationForm";
+
 interface PatientInfoProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<ConsultationFormValues>;
   patients: any[];
   onPatientSelect: (patientId: string) => void;
+  isEditing?: boolean;
 }
 
 export const PatientInfo = ({
   form,
   patients,
   onPatientSelect,
+  isEditing,
 }: PatientInfoProps) => {
   return (
     <div className="space-y-4">

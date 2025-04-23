@@ -4,11 +4,14 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 
+import { ConsultationFormValues } from "../ConsultationForm";
+
 interface ServiceSelectionProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<ConsultationFormValues>;
+  isEditing?: boolean;
 }
 
-export const ServiceSelection = ({ form }: ServiceSelectionProps) => {
+export const ServiceSelection = ({ form, isEditing }: ServiceSelectionProps) => {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Service & Medication</h3>
@@ -21,7 +24,11 @@ export const ServiceSelection = ({ form }: ServiceSelectionProps) => {
             <FormItem>
               <FormLabel>Service Type</FormLabel>
               <FormControl>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select 
+                  onValueChange={field.onChange} 
+                  value={field.value}
+                  disabled={!isEditing}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select service type" />
                   </SelectTrigger>
@@ -44,7 +51,11 @@ export const ServiceSelection = ({ form }: ServiceSelectionProps) => {
             <FormItem>
               <FormLabel>Treatment Approach</FormLabel>
               <FormControl>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select 
+                  onValueChange={field.onChange} 
+                  value={field.value}
+                  disabled={!isEditing}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select approach" />
                   </SelectTrigger>
@@ -72,6 +83,7 @@ export const ServiceSelection = ({ form }: ServiceSelectionProps) => {
                 <Input
                   {...field}
                   placeholder="Enter preferred medication"
+                  disabled={!isEditing}
                 />
               </FormControl>
               <FormMessage />
@@ -89,6 +101,7 @@ export const ServiceSelection = ({ form }: ServiceSelectionProps) => {
                 <Input
                   {...field}
                   placeholder="Enter preferred treatment plan"
+                  disabled={!isEditing}
                 />
               </FormControl>
               <FormMessage />
@@ -108,6 +121,7 @@ export const ServiceSelection = ({ form }: ServiceSelectionProps) => {
                 {...field}
                 className="min-h-[100px] w-full border rounded-md p-2"
                 placeholder="Enter any additional instructions or notes"
+                disabled={!isEditing}
               />
             </FormControl>
             <FormMessage />

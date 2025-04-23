@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Save } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
@@ -14,14 +14,19 @@ import { ServiceSelection } from "./form-sections/ServiceSelection";
 import { AssessmentNotes } from "./form-sections/AssessmentNotes";
 
 interface ConsultationFormProps {
+import { Consultation } from "@/types/consultation-types";
+
+interface ConsultationFormProps {
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  consultation?: Consultation;
+  isEditing?: boolean;
 }
 
 const consultationFormSchema = z.object({
-  patient_id: z.string().uuid({ message: "Please select a patient" }),
-  email: z.string().email({ message: "Please enter a valid email" }),
-  service: z.string().min(1, { message: "Please select a service" }),
+  patient_id: z.string().uuid({ message: "Please select a patient" }).optional(),
+  email: z.string().email({ message: "Please enter a valid email" }).optional(),
+  service: z.string().min(1, { message: "Please select a service" }).optional(),
   treatment_approach: z.string().optional(),
   preferred_medication: z.string().optional(),
   preferred_plan: z.string().optional(),
@@ -30,28 +35,37 @@ const consultationFormSchema = z.object({
   pmh: z.string().optional(),
   contra_indications: z.string().optional(),
   message: z.string().optional(),
-  form_completed: z.boolean().default(false),
+  form_completed: z.boolean().default(false).optional(),
 });
 
 type ConsultationFormValues = z.infer<typeof consultationFormSchema>;
+export type { ConsultationFormValues };
 
-export const ConsultationForm = ({ onOpenChange, onSuccess }: ConsultationFormProps) => {
+export const ConsultationForm = ({ onOpenChange, onSuccess, consultation, isEditing }: ConsultationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<ConsultationFormValues>({
     resolver: zodResolver(consultationFormSchema),
-    defaultValues: {
-      service: "weight-management",
-      treatment_approach: "maintenance",
-      preferred_medication: "",
-      preferred_plan: "",
-      assessment: "",
-      hpi: "",
-      pmh: "",
-      contra_indications: "",
-      message: "",
-      form_completed: false,
-    },
+    defaultValues: consultation
+      ? {
+          ...consultation,
+          patient_id: consultation.patient_id,
+          email: consultation.email,
+          service: consultation.service,
+          form_completed: consultation.form_completed ?? false,
+        }
+      : {
+          service: "weight-management",
+          treatment_approach: "maintenance",
+          preferred_medication: "",
+          preferred_plan: "",
+          assessment: "",
+          hpi: "",
+          pmh: "",
+          contra_indications: "",
+          message: "",
+          form_completed: false,
+        },
   });
 
   const { data: patients = [] } = useQuery({
@@ -94,6 +108,12 @@ export const ConsultationForm = ({ onOpenChange, onSuccess }: ConsultationFormPr
     } catch (error) {
       console.error("Error saving note:", error);
       toast.error("Failed to save note");
+    }
+  };
+
+  const disableFormFields = (isDisabled: boolean) => {
+    for (const key in form.getValues()) {
+      form.getFieldState(key as keyof ConsultationFormValues).isTouched = isDisabled;
     }
   };
 
@@ -141,20 +161,27 @@ export const ConsultationForm = ({ onOpenChange, onSuccess }: ConsultationFormPr
     } finally {
       setIsSubmitting(false);
     }
+import { useEffect } from "react";
+
   };
+
+  useEffect(() => {
+    disableFormFields(!isEditing);
+  }, [isEditing]);
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <PatientInfo 
-          form={form} 
-          patients={patients} 
-          onPatientSelect={handlePatientSelect} 
+          form={form}
+          patients={patients}
+          onPatientSelect={handlePatientSelect}
+          isEditing={isEditing}
         />
-        
-        <ServiceSelection form={form} />
-        
-        <AssessmentNotes form={form} />
+
+        <ServiceSelection form={form} isEditing={isEditing} />
+
+        <AssessmentNotes form={form} isEditing={isEditing} />
         
         <div className="flex justify-end gap-3 pt-4 border-t">
           <Button
@@ -170,7 +197,7 @@ export const ConsultationForm = ({ onOpenChange, onSuccess }: ConsultationFormPr
             onClick={handleSaveNote}
             variant="outline"
             className="bg-green-600 text-white hover:bg-green-700"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !isEditing}
           >
             <Save className="mr-2 h-4 w-4" /> 
             Save Note
@@ -178,7 +205,7 @@ export const ConsultationForm = ({ onOpenChange, onSuccess }: ConsultationFormPr
           <Button 
             type="submit" 
             className="bg-primary hover:bg-primary/90" 
-            disabled={isSubmitting}
+            disabled={isSubmitting || !isEditing}
           >
             {isSubmitting ? (
               <>
