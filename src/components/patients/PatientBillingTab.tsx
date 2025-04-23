@@ -1,120 +1,201 @@
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
-import { CreditCard, Plus, FileText, CheckCircle, AlertCircle, Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Invoice } from "@/types";
+import { supabase } from '@/lib/supabase';
 
-interface PatientBillingTabProps {
-  patientId: string;
+interface PaymentMethod {
+  id: string;
+  type: string;
+  is_default: boolean;
+  details: {
+    last4?: string;
+    expDate?: string;
+    brand?: string;
+  };
+  created_at: string;
 }
 
-export default function PatientBillingTab({ patientId }: PatientBillingTabProps) {
-  const { data: invoices, isLoading } = useQuery({
-    queryKey: ["patient-invoices", patientId],
+interface BillingRecord {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  created_at: string;
+  description: string | null;
+  invoice_id: string | null;
+}
+
+interface Subscription {
+  id: string;
+  name: string;
+  status: string;
+  amount: number;
+  billing_cycle: string;
+  next_billing_date: string | null;
+}
+
+export default function PatientBillingTab({ patientId }: { patientId: string }) {
+  const { data: paymentMethods, isLoading: isLoadingPaymentMethods } = useQuery<PaymentMethod[]>({
+    queryKey: ['patientPaymentMethods', patientId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("invoices")
-        .select("*")
-        .eq("patient_id", patientId)
-        .order("issue_date", { ascending: false });
-        
+        .from('payment_methods')
+        .select('*')
+        .eq('patient_id', patientId)
+        .order('created_at', { ascending: false });
+      
       if (error) throw error;
-      // Cast data to Invoice[] type since we know the shape matches
-      return data as unknown as Invoice[];
-    },
+      return data || [];
+    }
   });
 
-  const getStatusIcon = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "paid":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case "overdue":
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
-      case "pending":
-        return <Clock className="h-4 w-4 text-amber-500" />;
-      default:
-        return <FileText className="h-4 w-4 text-blue-500" />;
+  const { data: billingHistory, isLoading: isLoadingBillingHistory } = useQuery<BillingRecord[]>({
+    queryKey: ['patientBillingHistory', patientId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('billing_transactions')
+        .select('*')
+        .eq('patient_id', patientId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
     }
-  };
+  });
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "paid":
-        return "bg-green-100 text-green-800";
-      case "overdue":
-        return "bg-red-100 text-red-800";
-      case "pending":
-        return "bg-amber-100 text-amber-800";
-      default:
-        return "bg-blue-100 text-blue-800";
+  const { data: subscription, isLoading: isLoadingSubscription } = useQuery<Subscription | null>({
+    queryKey: ['patientSubscription', patientId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('patient_id', patientId)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
     }
-  };
+  });
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-medium">Invoices & Payments</h2>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Create Invoice
-        </Button>
-      </div>
-
-      {isLoading ? (
-        <div className="text-center py-8">Loading billing information...</div>
-      ) : invoices && invoices.length > 0 ? (
-        <div className="space-y-2">
-          {invoices.map((invoice) => (
-            <div 
-              key={invoice.id} 
-              className="bg-white border rounded-md p-4 flex justify-between items-center"
-            >
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">
-                    Invoice #{invoice.invoice_id}
-                  </span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Issued: {format(new Date(invoice.issue_date), "MMM d, yyyy")}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Due: {format(new Date(invoice.due_date), "MMM d, yyyy")}
-                </p>
-              </div>
-              <div className="text-right space-y-2">
-                <p className="font-medium">${invoice.amount.toFixed(2)}</p>
-                <Badge className={getStatusColor(invoice.status)}>
-                  {getStatusIcon(invoice.status)} 
-                  <span className="ml-1">
-                    {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
-                  </span>
-                </Badge>
-                <div>
-                  <Button variant="outline" size="sm">
-                    View Details
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12 border rounded-md bg-gray-50">
-          <CreditCard className="h-8 w-8 mx-auto text-muted-foreground" />
-          <h3 className="mt-2 text-lg font-medium">No invoices yet</h3>
-          <p className="text-muted-foreground mb-4">
-            This patient doesn't have any invoices or billing history.
-          </p>
-          <Button>
-            Create First Invoice
+      {/* Payment Methods Section */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Payment Methods</CardTitle>
+          <Button variant="default" className="bg-purple-600 hover:bg-purple-700 text-white">
+            Update Payment Method
           </Button>
-        </div>
-      )}
+        </CardHeader>
+        <CardContent>
+          {paymentMethods?.length ? (
+            <div>Payment methods list will go here</div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 space-y-4">
+              <p className="text-muted-foreground">No payment methods found</p>
+              <Button variant="default" className="bg-purple-600 hover:bg-purple-700 text-white">
+                Add Payment Method
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Billing History Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Billing History</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {billingHistory?.length ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {billingHistory.map((record) => (
+                  <TableRow key={record.id}>
+                    <TableCell>{new Date(record.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell>{record.description || 'Payment'}</TableCell>
+                    <TableCell className="text-right">
+                      {record.currency === 'USD' ? '$' : ''}
+                      {record.amount.toFixed(2)}
+                      {record.currency !== 'USD' ? ` ${record.currency}` : ''}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={
+                        record.status === 'succeeded' ? 'default' : 
+                        record.status === 'pending' ? 'secondary' : 
+                        'destructive'
+                      }>
+                        {record.status}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="flex items-center justify-center py-8">
+              <p className="text-muted-foreground">No billing history found for this patient</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Subscription Summary Section */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Subscription Summary</CardTitle>
+          {!subscription && (
+            <Button variant="default" className="bg-purple-600 hover:bg-purple-700 text-white">
+              Add Subscription
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent>
+          {subscription ? (
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Plan:</span>
+                <span>{subscription.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Status:</span>
+                <Badge variant={
+                  subscription.status === 'active' ? 'default' : 
+                  subscription.status === 'canceled' ? 'destructive' : 
+                  'secondary'
+                }>
+                  {subscription.status}
+                </Badge>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Amount:</span>
+                <span>${subscription.amount.toFixed(2)}/{subscription.billing_cycle}</span>
+              </div>
+              {subscription.next_billing_date && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Next Billing:</span>
+                  <span>{new Date(subscription.next_billing_date).toLocaleDateString()}</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center py-8">
+              <p className="text-muted-foreground">Patient does not have an active subscription</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

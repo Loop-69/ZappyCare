@@ -250,8 +250,10 @@ export type Database = {
           items: Json | null
           patient_id: string
           patient_name: string
+          payment_method_id: string | null
           refunded_amount: number | null
           status: string
+          transaction_id: string | null
           updated_at: string
         }
         Insert: {
@@ -266,8 +268,10 @@ export type Database = {
           items?: Json | null
           patient_id: string
           patient_name: string
+          payment_method_id?: string | null
           refunded_amount?: number | null
           status?: string
+          transaction_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -282,11 +286,21 @@ export type Database = {
           items?: Json | null
           patient_id?: string
           patient_name?: string
+          payment_method_id?: string | null
           refunded_amount?: number | null
           status?: string
+          transaction_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "invoices_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "billing_transactions"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       order_items: {
         Row: {
@@ -1075,6 +1089,98 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      billing_transactions: {
+        Row: {
+          id: string
+          patient_id: string
+          subscription_id: string | null
+          amount: number
+          currency: string
+          status: string
+          created_at: string
+          invoice_id: string | null
+          description: string | null
+          metadata: Json | null
+        }
+        Insert: {
+          id?: string
+          patient_id: string
+          subscription_id?: string | null
+          amount: number
+          currency?: string
+          status?: string
+          created_at?: string
+          invoice_id?: string | null
+          description?: string | null
+          metadata?: Json | null
+        }
+        Update: {
+          id?: string
+          patient_id?: string
+          subscription_id?: string | null
+          amount?: number
+          currency?: string
+          status?: string
+          created_at?: string
+          invoice_id?: string | null
+          description?: string | null
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_transactions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_transactions_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      payment_methods: {
+        Row: {
+          id: string
+          patient_id: string
+          type: string
+          is_default: boolean
+          details: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          patient_id: string
+          type: string
+          is_default?: boolean
+          details?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          patient_id?: string
+          type?: string
+          is_default?: boolean
+          details?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_methods_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {
