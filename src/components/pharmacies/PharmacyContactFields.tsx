@@ -39,9 +39,13 @@ export const PharmacyContactFields = ({ form }: PharmacyContactFieldsProps) => {
         name="contact_email"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Contact Email</FormLabel>
+            <FormLabel>Contact Email *</FormLabel>
             <FormControl>
-              <Input placeholder="contact@pharmacy.com" {...field} />
+              <Input 
+                placeholder="contact@pharmacy.com" 
+                {...field} 
+                className={form.formState.errors.contact_email ? "border-red-500" : ""}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>

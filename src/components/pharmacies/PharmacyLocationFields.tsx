@@ -20,20 +20,20 @@ interface PharmacyLocationFieldsProps {
 }
 
 export const PharmacyLocationFields = ({ form }: PharmacyLocationFieldsProps) => {
-  const [selectedStates, setSelectedStates] = useState<string[]>(form.getValues("states_served") || []);
+  const [selectedStates, setSelectedStates] = useState<string[]>([]);
 
-  // Initialize form values when component mounts
+  // Synchronize form state with local state
   useEffect(() => {
-    const currentStates = form.getValues("states_served");
-    if (currentStates) {
-      setSelectedStates(currentStates);
+    const initialStates = form.getValues("states_served");
+    if (initialStates && initialStates.length > 0) {
+      setSelectedStates(initialStates);
     }
   }, [form]);
 
   const handleStateChange = (values: string[]) => {
     setSelectedStates(values);
     form.setValue("states_served", values, { shouldValidate: true });
-    console.log("Selected states updated:", values);
+    form.trigger("states_served");
   };
 
   return (
@@ -47,7 +47,7 @@ export const PharmacyLocationFields = ({ form }: PharmacyLocationFieldsProps) =>
             <FormControl>
               <CheckboxMultiSelect
                 options={STATES}
-                selectedValues={selectedStates}
+                selectedValues={field.value} // Use field.value instead of local state
                 onChange={handleStateChange}
                 placeholder="Select states..."
               />

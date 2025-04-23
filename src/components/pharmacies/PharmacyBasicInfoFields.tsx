@@ -39,10 +39,11 @@ export const PharmacyBasicInfoFields = ({ form }: PharmacyBasicInfoFieldsProps) 
         name="type"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Pharmacy Type</FormLabel>
+            <FormLabel>Pharmacy Type *</FormLabel>  // Add asterisk for required
             <Select
               onValueChange={field.onChange}
               defaultValue={field.value}
+              required  // Add required attribute
             >
               <FormControl>
                 <SelectTrigger>

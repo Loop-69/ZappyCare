@@ -16,8 +16,8 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-// Make sure to import Checkbox
 import { Checkbox } from "@/components/ui/checkbox";
+import { EditOrderDialog } from "./EditOrderDialog";
 
 interface OrderActionsProps {
   order: Order;
@@ -34,14 +34,18 @@ function OrderActions({ order, iconOnly }: OrderActionsProps) {
     setIsViewOpen(true);
   };
 
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
   const handleEditOrder = () => {
-    // For now, just show a toast as edit functionality would need a separate dialog/form
+    setIsEditOpen(true);
+  };
+
+  const handleEditSuccess = () => {
     toast({
-      title: "Edit Order",
-      description: `Editing order ${order.id.substring(0, 8)}...`,
+      title: "Order Updated",
+      description: `Order ${order.id.substring(0, 8)}... has been updated successfully.`,
     });
-    // Future implementation could navigate to an edit page or open an edit dialog
-    // navigate(`/orders/edit/${order.id}`);
+    window.dispatchEvent(new CustomEvent('refetch-orders'));
   };
 
   const handleCancelOrder = async () => {
@@ -145,6 +149,14 @@ function OrderActions({ order, iconOnly }: OrderActionsProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Order Dialog */}
+      <EditOrderDialog 
+        open={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        orderId={order.id}
+        onSuccess={handleEditSuccess}
+      />
 
       {/* Cancel Order Confirmation Dialog */}
       <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>

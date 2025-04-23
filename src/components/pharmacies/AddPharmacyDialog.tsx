@@ -7,8 +7,18 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
-import { BaseModal } from "@/components/modals/BaseModal";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
 import { Pharmacy } from "@/types";
 import { Separator } from "@/components/ui/separator";
 
@@ -111,22 +121,16 @@ export const AddPharmacyDialog = ({ isOpen, onClose }: AddPharmacyDialogProps) =
   };
 
   return (
-    <BaseModal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Add New Pharmacy"
-      primaryAction={{
-        label: "Add Pharmacy",
-        onClick: form.handleSubmit(handleSubmit),
-        loading: addPharmacyMutation.isPending,
-      }}
-      secondaryAction={{
-        label: "Cancel",
-        onClick: onClose,
-      }}
-      showCloseButton={false}
-    >
-      <Form {...form}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add New Pharmacy</DialogTitle>
+          <DialogClose className="absolute right-4 top-4" />
+        </DialogHeader>
+        <DialogDescription>
+          Fill out the form below to register a new pharmacy.
+        </DialogDescription>
+        <Form {...form}>
         <form className="space-y-6" onSubmit={form.handleSubmit(handleSubmit)}>
           <div>
             <h3 className="text-md font-medium mb-2">Basic Information</h3>
@@ -154,7 +158,24 @@ export const AddPharmacyDialog = ({ isOpen, onClose }: AddPharmacyDialogProps) =
             <PharmacyStatusField form={form} />
           </div>
         </form>
-      </Form>
-    </BaseModal>
+        </Form>
+        <DialogFooter>
+          <Button 
+            variant="outline" 
+            onClick={onClose}
+            disabled={addPharmacyMutation.isPending}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit"  // Add this
+            onClick={form.handleSubmit(handleSubmit)} // Remove this
+            disabled={addPharmacyMutation.isPending}
+          >
+            Add Pharmacy
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };

@@ -1,7 +1,8 @@
+import { useCallback } from "react";
 import { PatientData } from "@/components/patients/PatientColumns";
 
 export const usePatientFilters = () => {
-  const filterPatients = (patients: PatientData[], term: string, status: string) => {
+  const filterPatients = useCallback((patients: PatientData[], term: string, status: string) => {
     return patients.filter(patient => {
       const matchesSearch = term === "" ||
                           patient.first_name.toLowerCase().includes(term.toLowerCase()) ||
@@ -11,7 +12,7 @@ export const usePatientFilters = () => {
       const matchesStatus = status === "" || status === "all" || patient.status === status;
       return matchesSearch && matchesStatus;
     });
-  };
+  }, []);
 
   return {
     filterPatients

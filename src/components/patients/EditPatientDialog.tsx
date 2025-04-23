@@ -22,6 +22,7 @@ import { PatientAddressDetails } from "./PatientAddressDetails";
 import { patientFormSchema, type PatientFormValues } from "./types";
 import { Patient } from "@/types";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface EditPatientDialogProps {
   open: boolean;
@@ -37,7 +38,13 @@ export function EditPatientDialog({
   patient 
 }: EditPatientDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState("personal");
   
+  /**
+   * Extracts default form values from patient data
+   * @param patient - The patient object or null
+   * @returns Default form values for the patient form
+   */
   const getDefaultValues = (patient: Patient | null): PatientFormValues => {
     if (!patient) {
       return {
@@ -75,20 +82,28 @@ export function EditPatientDialog({
     defaultValues: getDefaultValues(patient)
   });
 
+  // Reset form when dialog opens or patient changes
   useEffect(() => {
     if (open) {
       form.reset(getDefaultValues(patient));
-    } else {
-      form.reset();
+      setActiveTab("personal"); // Reset to first tab when opening
     }
   }, [open, patient, form]);
+
+  /**
+   * Handles form submission to update patient data
+   * @param values - The validated form values
+   */
   const handleSubmit = async (values: PatientFormValues) => {
+    if (!patient) {
+      toast.error("No patient selected");
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
-      // Validate form values before submission
-      await patientFormSchema.parseAsync(values);
-
+      // Create address object if address line is provided
       const address = values.address_line1 ? {
         line1: values.address_line1,
         city: values.city,
@@ -97,14 +112,10 @@ export function EditPatientDialog({
         country: values.country,
       } : null;
 
-      // Add timeout to prevent hanging
+      // Add timeout to prevent hanging requests
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Request timed out")), 10000)
+        setTimeout(() => reject(new Error("Request timed out")), 15000)
       );
-
-      if (!patient) {
-        throw new Error("No patient selected");
-      }
 
       const updatePromise = supabase
         .from("patients")
@@ -116,12 +127,13 @@ export function EditPatientDialog({
           date_of_birth: values.date_of_birth || null,
           status: values.status,
           address: address,
+          updated_at: new Date().toISOString(),
         })
         .eq("id", patient.id)
-        .then(({ error }) => ({ error }));
+        .then(({ data, error }) => ({ data, error }));
 
       const result = await Promise.race([updatePromise, timeoutPromise]);
-      const { error } = result as { error: PostgrestError | null };
+      const { error } = result as { data: any, error: PostgrestError | null };
       
       if (error) {
         throw new Error(error.message);
@@ -130,7 +142,6 @@ export function EditPatientDialog({
       toast.success("Patient updated successfully");
       onSuccess();
       onOpenChange(false);
-      form.reset();
     } catch (error) {
       console.error("Failed to update patient:", error);
       if (error instanceof Error) {
@@ -143,10 +154,27 @@ export function EditPatientDialog({
     }
   };
 
+  /**
+   * Validates the current tab and moves to the next if valid
+   */
+  const handleNextTab = async () => {
+    const personalFields = ["first_name", "last_name", "email", "phone", "date_of_birth", "status"];
+    
+    // Validate only the fields in the current tab
+    const result = await form.trigger(personalFields as any);
+    if (result) {
+      setActiveTab("address");
+    }
+  };
+
   return (
     <ErrorBoundary>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[600px]">
+      <Dialog open={open} onOpenChange={(isOpen) => {
+        if (!isSubmitting) {
+          onOpenChange(isOpen);
+        }
+      }}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Patient</DialogTitle>
             <DialogDescription>
@@ -156,22 +184,53 @@ export function EditPatientDialog({
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-              <fieldset disabled={isSubmitting} className="space-y-6">
-                <PatientPersonalDetails form={form} />
-                <PatientAddressDetails form={form} />
-              </fieldset>
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="personal">Personal Details</TabsTrigger>
+                  <TabsTrigger value="address">Address</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="personal" className="space-y-4 pt-4">
+                  <PatientPersonalDetails form={form} />
+                  
+                  <div className="flex justify-end">
+                    <Button 
+                      type="button" 
+                      onClick={handleNextTab}
+                      disabled={isSubmitting}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="address" className="space-y-4 pt-4">
+                  <PatientAddressDetails form={form} />
+                </TabsContent>
+              </Tabs>
               
               <DialogFooter>
                 <Button 
                   variant="outline" 
                   type="button"
                   onClick={() => onOpenChange(false)}
+                  disabled={isSubmitting}
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Save Changes
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="ml-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
                 </Button>
               </DialogFooter>
             </form>
