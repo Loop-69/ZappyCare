@@ -25,18 +25,7 @@ const Header = ({ user = { name: "Admin", role: "Admin" } }: HeaderProps) => {
   const navigate = useNavigate();
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-white px-6">
-      <div className="w-[300px]">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input 
-            type="search" 
-            placeholder="Search Patients..." 
-            className="pl-8 w-full bg-white border-muted rounded-md"
-          />
-        </div>
-      </div>
-      
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-end border-b bg-white px-6">
       <div className="flex items-center gap-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

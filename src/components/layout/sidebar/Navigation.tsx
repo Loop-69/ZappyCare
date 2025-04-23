@@ -44,7 +44,7 @@ export function Navigation({ routes }: NavigationProps) {
                 "flex items-center gap-x-3 px-4 py-2.5 text-sm font-medium transition-colors",
                 isActive
                   ? "text-white" // Active text color
-                  : "text-gray-700 hover:text-gray-900" // Inactive text color
+                  : "text-gray-300 hover:text-white" // Inactive text color
               )}
               style={{
                 backgroundColor: isActive ? getBackgroundColor(route.href) : 'transparent', // Apply background color based on route
